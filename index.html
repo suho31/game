@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>요트 다이스 · 구룡투 — 둘이서</title>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<style>
+  :root{
+    --bg:#0f1220; --panel:#1a1f36; --panel2:#232a49; --line:#323a63;
+    --txt:#e8ecff; --mut:#9aa3cc; --acc:#6c8cff; --acc2:#ffd166;
+    --good:#4ade80; --bad:#f87171; --hold:#ffd166; --red:#ff6b6b; --blue:#6c8cff;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:system-ui,-apple-system,"Segoe UI","Malgun Gothic",sans-serif;
+    background:radial-gradient(1200px 700px at 50% -10%,#1c2242,#0f1220);
+    color:var(--txt); min-height:100vh; -webkit-tap-highlight-color:transparent;
+  }
+  .wrap{max-width:860px;margin:0 auto;padding:18px 16px 60px}
+  h1{font-size:20px;margin:0 0 2px;letter-spacing:.5px}
+  .sub{color:var(--mut);font-size:13px;margin-bottom:18px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:14px;box-shadow:0 8px 30px rgba(0,0,0,.25)}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  button{font:inherit;font-weight:600;color:var(--txt);background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px 16px;cursor:pointer;transition:transform .05s,background .15s,border .15s}
+  button:hover{background:#2b3358}
+  button:active{transform:translateY(1px)}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  button.primary{background:linear-gradient(180deg,#7d98ff,#5a79ff);border-color:#5a79ff;color:#0b0f24}
+  button.gold{background:linear-gradient(180deg,#ffe08a,#ffcf4d);border-color:#e6b73c;color:#3a2c00}
+  input{font:inherit;color:var(--txt);background:#0d1024;border:1px solid var(--line);border-radius:12px;padding:12px;width:100%}
+  label{font-size:13px;color:var(--mut);display:block;margin:0 0 6px}
+  .mut{color:var(--mut)} .center{text-align:center}
+  .code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:30px;letter-spacing:8px;font-weight:800;color:var(--acc2)}
+  .pill{display:inline-block;padding:3px 10px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);font-size:12px;color:var(--mut)}
+  .hidden{display:none!important}
+  .status{font-size:14px;color:var(--mut);margin:6px 0 0}
+  .turnbadge{font-weight:700}
+  .me{color:var(--acc)} .them{color:var(--acc2)}
+
+  /* ---- dice (aligned; HOLD label in reserved space) ---- */
+  .dice{display:flex;gap:12px;justify-content:center;align-items:flex-start;flex-wrap:wrap;margin:10px 0 4px}
+  .dieslot{display:flex;flex-direction:column;align-items:center;gap:6px}
+  .die{
+    width:64px;height:64px;border-radius:14px;background:#f4f6ff;color:#1a1f36;
+    display:flex;align-items:center;justify-content:center;font-size:44px;line-height:1;
+    border:2px solid #cfd6ff;user-select:none;box-shadow:0 6px 14px rgba(0,0,0,.3);
+    transition:background .12s,border-color .12s,transform .08s;
+  }
+  .die.rollable{cursor:pointer}
+  .die.held{background:#2a2f14;color:#ffe08a;border-color:var(--hold)}
+  .die.empty{background:#141935;color:#39406b;border-color:#2a2f52}
+  .die.spinning{animation:shake .18s linear infinite;filter:blur(.3px)}
+  .die.pop{animation:pop .2s ease}
+  @keyframes shake{0%{transform:translateY(-2px)}50%{transform:translateY(2px)}100%{transform:translateY(-2px)}}
+  @keyframes pop{0%{transform:scale(.8)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
+  .tag{height:14px;font-size:10px;letter-spacing:1px;color:var(--hold);visibility:hidden}
+  .tag.on{visibility:visible}
+
+  /* ---- scorecard ---- */
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{border:1px solid var(--line);padding:8px 6px;text-align:center}
+  th{background:var(--panel2);color:var(--mut);font-weight:600}
+  td.cat{text-align:left;color:var(--txt);font-weight:600;white-space:nowrap}
+  .subt{font-size:11px;color:var(--mut);font-weight:400;display:block}
+  td.val{font-variant-numeric:tabular-nums}
+  td.pick{cursor:pointer;color:var(--good);background:#12351f}
+  td.pick:hover{background:#1a4a2b}
+  td.zero{color:var(--mut)}
+  tr.section td{background:#141a33;color:var(--acc2);font-weight:700;text-align:left}
+  tr.total td{background:#101430;font-weight:800}
+  .colhi{outline:2px solid var(--acc);outline-offset:-2px}
+  .foot{font-size:12px;color:var(--mut);margin-top:10px;text-align:center}
+  a{color:var(--acc)}
+  .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#232a49;border:1px solid var(--line);padding:10px 16px;border-radius:12px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:50}
+  .toast.show{opacity:1}
+  .biglink{word-break:break-all;font-size:12px}
+
+  /* ---- guryong ---- */
+  .tiles{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:10px 0}
+  .tile{width:56px;height:72px;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:800;font-size:26px;border:2px solid var(--line);background:var(--panel2);cursor:pointer;user-select:none;box-shadow:0 5px 12px rgba(0,0,0,.3)}
+  .tile small{font-size:12px;font-weight:600;opacity:.7}
+  .tile:hover{border-color:var(--acc);transform:translateY(-3px)}
+  .tile.blue{background:linear-gradient(180deg,#2b3f8f,#1d2c66);border-color:#3f57b8;color:#dbe4ff}
+  .tile.red{background:linear-gradient(180deg,#8f2b3f,#661d2c);border-color:#b83f57;color:#ffdbe1}
+  .tile.face{width:64px;height:82px;font-size:34px;cursor:default}
+  .tile.back{background:repeating-linear-gradient(45deg,#2a2f52,#2a2f52 6px,#232a49 6px,#232a49 12px);color:transparent;cursor:default}
+  .loglist{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+  .chip{min-width:26px;text-align:center;padding:3px 6px;border-radius:8px;font-size:12px;font-weight:700;border:1px solid var(--line)}
+  .chip.w{background:#12351f;color:var(--good)} .chip.l{background:#3a1414;color:var(--bad)} .chip.d{background:#232a49;color:var(--mut)}
+  .banner{font-size:22px;font-weight:800;text-align:center;margin:10px 0}
+  .vs{display:flex;gap:18px;justify-content:center;align-items:center;margin:14px 0}
+  .rtable td{font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🎲 요트 다이스 · 🐉 구룡투</h1>
+  <div class="sub">둘이서 온라인 대전 · 방장이 방을 만들고 친구가 숫자 코드로 접속</div>
+
+  <!-- ============ LOBBY ============ -->
+  <div id="lobby">
+    <div class="card">
+      <label>내 이름 (선택)</label>
+      <input id="nameInput" placeholder="예: 철수" maxlength="12">
+    </div>
+    <div class="card">
+      <button class="primary" id="btnCreate" style="width:100%">🛠️ 방 만들기 (방장)</button>
+      <div style="height:14px"></div>
+      <label>친구 방에 참가 — 숫자 코드 입력</label>
+      <div class="row">
+        <input id="joinCode" placeholder="예: 1234" maxlength="6" inputmode="numeric"
+               style="flex:1;min-width:140px;letter-spacing:6px;font-weight:800;text-align:center;font-size:20px">
+        <button id="btnJoin">참가</button>
+      </div>
+    </div>
+    <div class="card hidden" id="waitCard">
+      <div class="center">
+        <div class="mut" style="margin-bottom:8px">이 코드를 친구에게 알려주세요</div>
+        <div class="code" id="roomCode">----</div>
+        <div style="height:12px"></div>
+        <button id="btnCopyLink">🔗 초대 링크 복사</button>
+        <div class="status" id="waitStatus">친구 접속 대기 중…</div>
+        <div class="biglink mut" id="inviteLink" style="margin-top:8px"></div>
+      </div>
+    </div>
+    <div class="card hidden" id="joiningCard">
+      <div class="center status" id="joinStatus">연결 중…</div>
+    </div>
+  </div>
+
+  <!-- ============ GAME MENU ============ -->
+  <div id="menu" class="hidden">
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <span class="pill">● 연결됨</span>
+        <div class="mut" id="whoLine"></div>
+      </div>
+    </div>
+    <div class="card center">
+      <div style="font-weight:700;margin-bottom:10px">게임을 고르세요</div>
+      <div class="row" style="justify-content:center">
+        <button class="primary" id="pickYacht" style="min-width:180px">🎲 요트 다이스</button>
+        <button class="gold" id="pickGuryong" style="min-width:180px">🐉 구룡투</button>
+      </div>
+      <div class="status" id="menuHint"></div>
+    </div>
+  </div>
+
+  <!-- ============ YACHT ============ -->
+  <div id="yacht" class="hidden">
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <div class="turnbadge" id="yTurn">-</div>
+        <div class="row"><button id="yMenu">메뉴로</button><button id="yExit">처음으로</button></div>
+      </div>
+      <div class="dice" id="yDice"></div>
+      <div class="center" style="margin-top:14px">
+        <button class="primary" id="yRoll" style="min-width:200px">굴리기</button>
+        <div class="status" id="yStatus"></div>
+      </div>
+    </div>
+    <div class="card" style="overflow-x:auto">
+      <table id="yTable"></table>
+      <div class="foot" id="yFoot"></div>
+    </div>
+  </div>
+
+  <!-- ============ GURYONGTU ============ -->
+  <div id="guryong" class="hidden">
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <div class="turnbadge">🐉 구룡투</div>
+        <div class="row"><button id="gMenu">메뉴로</button><button id="gExit">처음으로</button></div>
+      </div>
+      <div id="gInfo" style="margin-top:10px"></div>
+      <div id="gLog" class="loglist"></div>
+    </div>
+    <div class="card"><div id="gMain"></div></div>
+    <div class="foot">숫자는 서로 안 보여요 · 매 라운드 승/패/무만 공개 → 대결이 끝나면 전체 공개! · <b>1은 9를 이깁니다</b></div>
+  </div>
+
+  <div class="foot">P2P(WebRTC)로 직접 연결 · 서버에 게임 데이터가 저장되지 않아요</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const PREFIX = 'ygt2025n-';
+let peer=null, conn=null, isHost=false, myIndex=0, myName='나';
+let state=null;                 // 호스트만 전체 state 보유
+
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1900);}
+function show(id){['lobby','menu','yacht','guryong'].forEach(v=>$(v).classList.toggle('hidden', v!==id));}
+function code4(){return String(Math.floor(1000+Math.random()*9000));}  // 숫자 4자리
+
+/* ================= 연결 (PeerJS, 방장=권위) ================= */
+function createRoom(){
+  myName=($('nameInput').value.trim())||'방장'; isHost=true; myIndex=0;
+  const code=code4();
+  peer=new Peer(PREFIX+code,{debug:1});
+  peer.on('open',()=>{
+    $('waitCard').classList.remove('hidden');
+    $('roomCode').textContent=code;
+    const link=location.origin+location.pathname+'?join='+code;
+    $('inviteLink').textContent=link;
+    $('btnCopyLink').onclick=()=>navigator.clipboard.writeText(link).then(()=>toast('초대 링크 복사됨'),()=>toast('복사 실패 — 코드를 직접 알려주세요'));
+  });
+  peer.on('connection',c=>{ if(conn){c.close();return;} conn=c; setupHostConn(); });
+  peer.on('error',e=>{ if(e.type==='unavailable-id'){peer.destroy();createRoom();} else $('waitStatus').textContent='연결 오류: '+e.type; });
+}
+function setupHostConn(){
+  conn.on('open',()=>{ initState(); pushState(); });
+  conn.on('data',msg=>{
+    if(msg.type==='hello'){ state.names[1]=msg.name||'친구'; pushState(); }
+    else if(msg.type==='action'){ applyAction(1,msg.action); pushState(); }
+  });
+  conn.on('close',()=>toast('상대와 연결이 끊겼어요'));
+  conn.on('error',()=>toast('연결 오류'));
+}
+function joinRoom(code){
+  code=(code||'').trim(); if(!code){toast('코드를 입력하세요');return;}
+  myName=($('nameInput').value.trim())||'친구'; isHost=false; myIndex=1;
+  $('joiningCard').classList.remove('hidden');
+  peer=new Peer({debug:1});
+  peer.on('open',()=>{
+    conn=peer.connect(PREFIX+code,{reliable:true});
+    conn.on('open',()=>{ $('joinStatus').textContent='연결됨! 방장이 게임 고르는 중…'; conn.send({type:'hello',name:myName}); });
+    conn.on('data',msg=>{ if(msg.type==='state'){ state=msg.state; render(state); } });
+    conn.on('close',()=>toast('상대와 연결이 끊겼어요'));
+    conn.on('error',()=>{ $('joinStatus').textContent='연결 실패 — 코드/네트워크를 확인하세요.'; });
+  });
+  peer.on('error',e=>{ $('joinStatus').textContent='연결 실패: '+e.type+' (코드 확인)'; });
+}
+function leaveRoom(){ try{conn&&conn.close();}catch(e){} try{peer&&peer.destroy();}catch(e){} location.href=location.pathname; }
+
+/* 호스트: 각자에게 맞게 가린 state 전송 + 자기 화면 렌더 */
+function pushState(){ if(conn&&conn.open) conn.send({type:'state',state:sanitize(state,1)}); render(sanitize(state,0)); }
+function localAction(a){ if(isHost){ applyAction(0,a); pushState(); } else if(conn&&conn.open){ conn.send({type:'action',action:a}); } }
+
+/* 상대의 비밀(구룡투 낸 숫자/손패/이번 픽)을 가림 */
+function sanitize(s,forIndex){
+  const cp=JSON.parse(JSON.stringify(s)); const g=cp.guryong;
+  if(g && !g.reveal){
+    const opp=1-forIndex;
+    g.plays[opp]=g.plays[opp].map(()=>null);
+    g.hands[opp]=g.hands[opp].map(()=>null);
+    g.pending[opp]=null;
+    if(g.lastResult&&g.lastResult.nums) g.lastResult.nums[opp]=null;
+  }
+  return cp;
+}
+
+/* ================= 상태 & 규칙 (호스트에서만 mutate) ================= */
+function initState(){ state={ view:'menu', names:[myName,'친구'], yacht:null, guryong:null }; }
+function applyAction(pi,a){
+  if(!isHost) return;
+  switch(a.t){
+    case 'chooseGame':
+      if(pi!==0) return;
+      if(a.game==='yacht'){ state.view='yacht'; state.yacht=newYacht(); }
+      else { state.view='guryong'; state.guryong=newGuryong(); }
+      return;
+    case 'backToMenu': if(pi!==0) return; state.view='menu'; return;
+    /* yacht */
+    case 'y_roll': yRoll(pi); return;
+    case 'y_hold': yHold(pi,a.i); return;
+    case 'y_score': yScore(pi,a.cat); return;
+    case 'y_restart': if(pi!==0) return; state.yacht=newYacht(); return;
+    /* guryong */
+    case 'g_pick': gPick(pi,a.tile); return;
+    case 'g_next': gNext(); return;
+    case 'g_nextduel': if(pi!==0) return; gNextDuel(); return;
+    case 'g_restart': if(pi!==0) return; state.guryong=newGuryong(); return;
+  }
+}
+
+/* ---------------- 요트 다이스 ---------------- */
+const CATS=[
+  {k:'ones',n:'1  (Aces)',sec:'up'},{k:'twos',n:'2  (Twos)',sec:'up'},{k:'threes',n:'3  (Threes)',sec:'up'},
+  {k:'fours',n:'4  (Fours)',sec:'up'},{k:'fives',n:'5  (Fives)',sec:'up'},{k:'sixes',n:'6  (Sixes)',sec:'up'},
+  {k:'choice',n:'초이스',d:'주사위 합',sec:'low'},
+  {k:'fourkind',n:'포 카인드',d:'같은눈 4개↑ → 전체 합',sec:'low'},
+  {k:'fullhouse',n:'풀 하우스',d:'3+2 → 전체 합',sec:'low'},
+  {k:'sstraight',n:'스몰 스트레이트',d:'연속 4개 → 15점',sec:'low'},
+  {k:'lstraight',n:'라지 스트레이트',d:'연속 5개 → 30점',sec:'low'},
+  {k:'yacht',n:'요트',d:'같은눈 5개 → 50점',sec:'low'},
+];
+function newYacht(){return{dice:[1,1,1,1,1],held:[false,false,false,false,false],rollsLeft:3,turn:0,rolledOnce:false,sheet:[{},{}],over:false};}
+function yRoll(pi){const g=state.yacht;if(!g||g.over||g.turn!==pi||g.rollsLeft<=0)return;for(let i=0;i<5;i++)if(!g.held[i])g.dice[i]=1+Math.floor(Math.random()*6);g.rollsLeft--;g.rolledOnce=true;}
+function yHold(pi,i){const g=state.yacht;if(!g||g.over||g.turn!==pi||!g.rolledOnce||g.rollsLeft<=0)return;g.held[i]=!g.held[i];}
+function yScore(pi,cat){const g=state.yacht;if(!g||g.over||g.turn!==pi||!g.rolledOnce||g.sheet[pi][cat]!==undefined)return;
+  g.sheet[pi][cat]=scoreFor(cat,g.dice);
+  g.dice=[1,1,1,1,1];g.held=[false,false,false,false,false];g.rollsLeft=3;g.rolledOnce=false;g.turn=pi^1;
+  const done=p=>CATS.every(c=>g.sheet[p][c.k]!==undefined); if(done(0)&&done(1))g.over=true;}
+function scoreFor(cat,dice){
+  const c=[0,0,0,0,0,0,0];dice.forEach(d=>c[d]++);const sum=dice.reduce((a,b)=>a+b,0);
+  const run=(a,len)=>{const s=new Set(dice);for(let i=0;i<len;i++)if(!s.has(a+i))return false;return true;};
+  switch(cat){
+    case'ones':return c[1];case'twos':return c[2]*2;case'threes':return c[3]*3;case'fours':return c[4]*4;case'fives':return c[5]*5;case'sixes':return c[6]*6;
+    case'choice':return sum;
+    case'fourkind':return c.some(x=>x>=4)?sum:0;
+    case'fullhouse':return (c.some(x=>x===3)&&c.some(x=>x===2))?sum:0;
+    case'sstraight':return (run(1,4)||run(2,4)||run(3,4))?15:0;
+    case'lstraight':return (run(1,5)||run(2,5))?30:0;
+    case'yacht':return c.some(x=>x===5)?50:0;
+  } return 0;
+}
+const upperSum=sh=>['ones','twos','threes','fours','fives','sixes'].reduce((a,k)=>a+(sh[k]||0),0);
+const bonus=sh=>upperSum(sh)>=63?35:0;
+const grand=sh=>{let t=bonus(sh);CATS.forEach(c=>t+=(sh[c.k]||0));return t;};
+
+/* ---------------- 구룡투 ---------------- */
+function newGuryong(){return{
+  phase:'pick', duel:1, matchWins:[0,0], round:1,
+  hands:[[1,2,3,4,5,6,7,8,9],[1,2,3,4,5,6,7,8,9]],
+  plays:[[],[]], roundWins:[0,0], pending:[null,null], locked:[false,false],
+  roundLog:[], lastResult:null, reveal:false, duelResult:null, champion:null
+};}
+function gPick(pi,tile){const g=state.guryong;if(!g||g.phase!=='pick'||g.locked[pi]||!g.hands[pi].includes(tile))return;
+  g.pending[pi]=tile;g.locked[pi]=true;
+  if(g.locked[0]&&g.locked[1])gResolve();}
+function gResolve(){const g=state.guryong;const a=g.pending[0],b=g.pending[1];
+  g.plays[0].push(a);g.plays[1].push(b);
+  g.hands[0]=g.hands[0].filter(x=>x!==a);g.hands[1]=g.hands[1].filter(x=>x!==b);
+  let w; if(a===b)w=-1; else if(a===1&&b===9)w=0; else if(b===1&&a===9)w=1; else w=(a>b?0:1);
+  if(w>=0)g.roundWins[w]++;
+  g.roundLog.push(w);
+  g.lastResult={winner:w,nums:[a,b],round:g.round};
+  g.pending=[null,null];g.locked=[false,false];
+  g.phase='result';
+}
+function duelDecided(){const g=state.guryong;const rem=9-g.round;const[w0,w1]=g.roundWins;
+  return g.round>=9 || w0>w1+rem || w1>w0+rem;}
+function gNext(){const g=state.guryong;if(g.phase!=='result')return;
+  if(duelDecided()){
+    const[w0,w1]=g.roundWins; const winner=w0>w1?0:(w1>w0?1:-1);
+    g.duelResult={winner,roundWins:[w0,w1]}; g.reveal=true;
+    if(winner>=0)g.matchWins[winner]++;
+    if(g.matchWins[0]>=2||g.matchWins[1]>=2){g.phase='matchover';g.champion=g.matchWins[0]>=2?0:1;}
+    else g.phase='duelover';
+  } else { g.round++; g.phase='pick'; }
+}
+function gNextDuel(){const g=state.guryong;if(g.phase!=='duelover')return;
+  g.duel++; g.round=1; g.hands=[[1,2,3,4,5,6,7,8,9],[1,2,3,4,5,6,7,8,9]];
+  g.plays=[[],[]]; g.roundWins=[0,0]; g.pending=[null,null]; g.locked=[false,false];
+  g.roundLog=[]; g.lastResult=null; g.reveal=false; g.duelResult=null; g.phase='pick';
+}
+
+/* ================= 렌더링 ================= */
+function render(s){
+  if(!s){show('lobby');return;}
+  if(s.view==='menu'){renderMenu(s);show('menu');}
+  else if(s.view==='yacht'){renderYacht(s);show('yacht');}
+  else if(s.view==='guryong'){renderGuryong(s);show('guryong');}
+}
+function renderMenu(s){
+  $('whoLine').textContent=`${s.names[0]}  vs  ${s.names[1]}`;
+  $('pickYacht').disabled=!isHost; $('pickGuryong').disabled=!isHost;
+  $('menuHint').textContent=isHost?'방장이 게임을 선택하면 둘 다 시작돼요.':'방장이 게임을 고르는 중… 잠시만요.';
+}
+const nameOf=(s,i)=> i===myIndex?`${s.names[i]}(나)`:s.names[i];
+function menuBtn(el){ if(isHost){el.textContent='메뉴로';el.onclick=()=>localAction({t:'backToMenu'});} else {el.textContent='나가기';el.onclick=leaveRoom;} }
+
+/* ----- 요트 렌더 (+ 슬롯머신 굴림 연출) ----- */
+const FACES=['','⚀','⚁','⚂','⚃','⚄','⚅'];
+let ySig=null, spinTimers=[];
+function stopSpins(){spinTimers.forEach(clearInterval);spinTimers=[];}
+function renderYacht(s){
+  const g=s.yacht, myTurn=g.turn===myIndex&&!g.over;
+  const rolled = !!ySig && ySig.turn===g.turn && g.rollsLeft===ySig.rolls-1 && g.rolledOnce && !g.over;
+  ySig={turn:g.turn,rolls:g.rollsLeft};
+
+  $('yTurn').innerHTML=g.over?'🏁 게임 종료':`차례: <span class="${g.turn===myIndex?'me':'them'}">${nameOf(s,g.turn)}</span>`;
+
+  const dd=$('yDice'); dd.innerHTML=''; stopSpins();
+  const canHold=myTurn&&g.rolledOnce&&g.rollsLeft>0;
+  const dieEls=[];
+  g.dice.forEach((v,i)=>{
+    const slot=document.createElement('div');slot.className='dieslot';
+    const el=document.createElement('div');
+    el.className='die'+(g.held[i]?' held':'')+(g.rolledOnce?'':' empty')+(canHold?' rollable':'');
+    el.textContent=g.rolledOnce?FACES[v]:'·';
+    if(canHold)el.onclick=()=>localAction({t:'y_hold',i});
+    const tag=document.createElement('div');tag.className='tag'+(g.held[i]?' on':'');tag.textContent='HOLD';
+    slot.appendChild(el);slot.appendChild(tag);dd.appendChild(slot);dieEls.push(el);
+  });
+  if(rolled){
+    dieEls.forEach((el,i)=>{
+      if(g.held[i])return;
+      el.classList.add('spinning');
+      const t=setInterval(()=>{el.textContent=FACES[1+Math.floor(Math.random()*6)];},60);
+      spinTimers.push(t);
+      setTimeout(()=>{clearInterval(t);el.classList.remove('spinning');el.classList.add('pop');el.textContent=FACES[g.dice[i]];setTimeout(()=>el.classList.remove('pop'),200);},520+i*150);
+    });
+  }
+
+  const rb=$('yRoll'); rb.disabled=!(myTurn&&g.rollsLeft>0);
+  rb.textContent=g.rollsLeft===3?'굴리기':`다시 굴리기 (남은 ${g.rollsLeft})`;
+  rb.onclick=()=>localAction({t:'y_roll'});
+  $('yStatus').textContent=g.over?'':(myTurn?(g.rolledOnce?'HOLD로 남길 주사위를 고르고, 점수표에서 칸을 선택해 기록하세요.':'주사위를 굴리세요. (턴당 최대 3번)'):`${s.names[g.turn]}님이 플레이하는 중…`);
+  menuBtn($('yMenu')); $('yExit').onclick=leaveRoom;
+
+  // 점수표
+  const canPreview=myTurn&&g.rolledOnce;
+  let h='<tr><th style="text-align:left">항목</th>';
+  for(let p=0;p<2;p++)h+=`<th class="${p===g.turn&&!g.over?'colhi':''}">${nameOf(s,p)}</th>`;
+  h+='</tr><tr class="section"><td colspan="3">상단 (숫자별 합)</td></tr>';
+  const rowFor=c=>{
+    let r=`<tr><td class="cat">${c.n}${c.d?`<span class="subt">${c.d}</span>`:''}</td>`;
+    for(let p=0;p<2;p++){
+      const v=g.sheet[p][c.k];
+      if(v!==undefined)r+=`<td class="val ${v===0?'zero':''}">${v}</td>`;
+      else if(p===g.turn&&canPreview)r+=`<td class="val pick" data-cat="${c.k}">${scoreFor(c.k,g.dice)}</td>`;
+      else r+=`<td class="val mut">·</td>`;
+    } return r+'</tr>';
+  };
+  CATS.filter(c=>c.sec==='up').forEach(c=>h+=rowFor(c));
+  h+='<tr><td class="cat">보너스 <span class="subt">상단 63↑ → +35</span></td>';
+  for(let p=0;p<2;p++)h+=`<td class="val">${bonus(g.sheet[p])} <span class="subt">(${upperSum(g.sheet[p])}/63)</span></td>`;
+  h+='</tr><tr class="section"><td colspan="3">하단 (족보)</td></tr>';
+  CATS.filter(c=>c.sec==='low').forEach(c=>h+=rowFor(c));
+  h+='<tr class="total"><td class="cat">합계</td>';
+  for(let p=0;p<2;p++)h+=`<td class="val">${grand(g.sheet[p])}</td>`;
+  h+='</tr>';
+  const tb=$('yTable'); tb.innerHTML=h;
+  if(canPreview)tb.querySelectorAll('td.pick').forEach(td=>td.onclick=()=>localAction({t:'y_score',cat:td.dataset.cat}));
+
+  if(g.over){
+    const t0=grand(g.sheet[0]),t1=grand(g.sheet[1]);
+    let msg; if(t0===t1)msg=`무승부! (${t0} : ${t1})`;
+    else{const w=t0>t1?0:1;msg=`🏆 승자: ${s.names[w]}  (${Math.max(t0,t1)} : ${Math.min(t0,t1)})`;}
+    $('yFoot').innerHTML=`<div style="font-size:16px;font-weight:800;color:var(--acc2);margin-bottom:8px">${msg}</div>`+
+      (isHost?`<button class="primary" id="yRestart">다시하기</button> `:'')+`<button id="yBack2"></button>`;
+    if(isHost)$('yRestart').onclick=()=>localAction({t:'y_restart'});
+    menuBtn($('yBack2'));
+  } else $('yFoot').textContent='';
+}
+
+/* ----- 구룡투 렌더 ----- */
+function renderGuryong(s){
+  const g=s.guryong, opp=1-myIndex, myColor=myIndex===0?'blue':'red';
+  // 정보 줄
+  $('gInfo').innerHTML=
+    `<div class="row" style="justify-content:space-between">
+       <div><b>대결 ${g.duel}</b> · 라운드 ${Math.min(g.round,9)}/9</div>
+       <div class="mut">대결 승 (2선승): <b class="me">${s.names[myIndex]} ${g.matchWins[myIndex]}</b> : <b class="them">${g.matchWins[opp]} ${s.names[opp]}</b></div>
+     </div>
+     <div class="status">이번 대결 라운드 승수 — 나 <b>${g.roundWins[myIndex]}</b> : <b>${g.roundWins[opp]}</b> 상대 · 상대 남은 용 ${g.hands[opp].length}개</div>`;
+  // 라운드 결과 칩 (내 관점)
+  $('gLog').innerHTML=g.roundLog.map((w,i)=>{
+    const cls=w===-1?'d':(w===myIndex?'w':'l'); const t=w===-1?'무':(w===myIndex?'승':'패');
+    return `<span class="chip ${cls}">R${i+1} ${t}</span>`;
+  }).join('');
+  menuBtn($('gMenu')); $('gExit').onclick=leaveRoom;
+
+  const M=$('gMain');
+  if(g.phase==='pick'){
+    if(!g.locked[myIndex]){
+      M.innerHTML=`<div class="center" style="font-weight:700;margin-bottom:6px">용을 하나 선택하세요</div>
+        <div class="center mut" style="font-size:13px">${g.locked[opp]?'상대는 이미 제출했어요.':'상대도 동시에 고르는 중…'}</div>
+        <div class="tiles" id="gHand"></div>`;
+      const hand=$('gHand');
+      g.hands[myIndex].forEach(n=>{
+        const el=document.createElement('div');el.className='tile '+myColor;
+        el.innerHTML=`${n}<small>龍</small>`;
+        el.onclick=()=>localAction({t:'g_pick',tile:n});
+        hand.appendChild(el);
+      });
+    }else{
+      M.innerHTML=`<div class="center">
+        <div style="font-weight:700;margin-bottom:8px">제출 완료 — 상대를 기다리는 중…</div>
+        <div class="vs"><div class="tile face ${myColor}">${g.pending[myIndex]}<small>내 용</small></div></div>
+        <div class="mut">${g.locked[opp]?'상대도 제출! 결과 처리 중…':'상대가 아직 고르는 중이에요.'}</div></div>`;
+    }
+  }
+  else if(g.phase==='result'){
+    const r=g.lastResult, w=r.winner;
+    const label=w===-1?'무승부':(w===myIndex?'이번 라운드 승리!':'이번 라운드 패배');
+    const col=w===-1?'var(--mut)':(w===myIndex?'var(--good)':'var(--bad)');
+    M.innerHTML=`<div class="banner" style="color:${col}">${label}</div>
+      <div class="vs">
+        <div class="tile face ${myColor}">${r.nums[myIndex]}<small>나</small></div>
+        <div style="font-weight:800">VS</div>
+        <div class="tile face back">?<small>상대</small></div>
+      </div>
+      <div class="center mut" style="font-size:13px">상대가 낸 숫자는 대결이 끝나면 공개돼요.</div>
+      <div class="center" style="margin-top:14px"><button class="primary" id="gNextBtn">다음 라운드 ▶</button></div>`;
+    $('gNextBtn').onclick=()=>localAction({t:'g_next'});
+  }
+  else if(g.phase==='duelover'||g.phase==='matchover'){
+    const dr=g.duelResult;
+    const dlabel=dr.winner===-1?'이번 대결 무승부':(dr.winner===myIndex?'이번 대결 승리! 🎉':'이번 대결 패배');
+    let html=`<div class="banner" style="color:var(--acc2)">${dlabel}</div>
+      <div class="center mut">라운드 승수 ${dr.roundWins[myIndex]} : ${dr.roundWins[opp]}</div>
+      <table class="rtable" style="margin-top:12px"><tr><th>R</th><th>${nameOf(s,myIndex)}</th><th>${nameOf(s,opp)}</th><th>결과</th></tr>`;
+    for(let i=0;i<g.plays[myIndex].length;i++){
+      const a=g.plays[myIndex][i], b=g.plays[opp][i], w=g.roundLog[i];
+      const t=w===-1?'무':(w===myIndex?'승':'패');
+      html+=`<tr><td>${i+1}</td><td>${a}</td><td>${b}</td><td>${t}</td></tr>`;
+    }
+    html+='</table>';
+    if(g.phase==='matchover'){
+      const champ=g.champion===myIndex?'🏆 최종 우승! 축하해요!':'최종 패배 — 다음 판을 노려요';
+      html+=`<div class="banner" style="margin-top:14px;color:var(--good)">${champ}</div>
+        <div class="center" style="margin-top:8px">`+
+        (isHost?`<button class="primary" id="gRestart">새 게임</button> `:'')+`<button id="gEnd"></button></div>`;
+    }else{
+      html+=`<div class="center" style="margin-top:14px">`+
+        (isHost?`<button class="primary" id="gND">다음 대결 ▶</button>`:`<span class="mut">방장이 다음 대결을 시작하길 기다리는 중…</span>`)+
+        ` <button id="gEnd"></button></div>`;
+    }
+    M.innerHTML=html;
+    if(g.phase==='matchover'&&isHost)$('gRestart').onclick=()=>localAction({t:'g_restart'});
+    if(g.phase==='duelover'&&isHost)$('gND').onclick=()=>localAction({t:'g_nextduel'});
+    menuBtn($('gEnd'));
+  }
+}
+
+/* ================= 바인딩 ================= */
+$('btnCreate').onclick=createRoom;
+$('btnJoin').onclick=()=>joinRoom($('joinCode').value);
+$('joinCode').addEventListener('input',e=>e.target.value=e.target.value.replace(/\D/g,''));
+$('joinCode').addEventListener('keydown',e=>{if(e.key==='Enter')joinRoom($('joinCode').value);});
+$('pickYacht').onclick=()=>localAction({t:'chooseGame',game:'yacht'});
+$('pickGuryong').onclick=()=>localAction({t:'chooseGame',game:'guryong'});
+(function(){const j=new URLSearchParams(location.search).get('join');if(j){$('joinCode').value=String(j).replace(/\D/g,'');toast('코드가 입력됐어요. 이름 적고 참가!');}})();
+</script>
+</body>
+</html>

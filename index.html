@@ -92,6 +92,65 @@
   .banner{font-size:22px;font-weight:800;text-align:center;margin:10px 0}
   .vs{display:flex;gap:18px;justify-content:center;align-items:center;margin:14px 0}
   .rtable td{font-variant-numeric:tabular-nums}
+
+  /* ---- 전자 대결장(machine) ---- */
+  .machine{position:relative;border-radius:22px;padding:16px 16px 18px;
+    background:linear-gradient(180deg,#20263f,#141830 60%,#0f1326);
+    border:1px solid #2c335e;box-shadow:0 18px 50px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.05);overflow:hidden}
+  .machine::before{content:"龍";position:absolute;right:-14px;top:-30px;font-size:200px;color:rgba(255,255,255,.03);pointer-events:none;font-weight:900}
+  .mtop{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:14px}
+  .mbtn{padding:8px 12px;font-size:13px;border-radius:10px}
+  .mtitle{font-weight:900;font-size:26px;letter-spacing:3px;color:#ffd166;text-shadow:0 0 14px rgba(255,140,60,.5)}
+  .mtitle span{display:block;font-size:11px;letter-spacing:6px;color:var(--mut);text-align:center;margin-top:-2px;text-shadow:none}
+  .lamps{display:flex;gap:12px;align-items:stretch;justify-content:center}
+  .lamp{flex:0 0 92px;border-radius:14px;padding:12px 6px;text-align:center;position:relative;
+    border:2px solid #2a3160;background:#171c34;transition:box-shadow .2s,border-color .2s,background .2s;filter:saturate(.5) brightness(.75)}
+  .lamp .ldot{width:20px;height:20px;border-radius:50%;margin:0 auto 6px;background:#3a4270;box-shadow:inset 0 0 4px rgba(0,0,0,.6)}
+  .lamp .lname{font-weight:800;font-size:15px}
+  .lamp .lwin{font-size:30px;font-weight:900;line-height:1.1;font-variant-numeric:tabular-nums}
+  .lamp .lsub{font-size:11px;color:var(--mut);min-height:14px}
+  .lamp.blue{border-color:#31468f} .lamp.blue .ldot{background:#4f7bff}
+  .lamp.red{border-color:#8f3146} .lamp.red .ldot{background:#ff5c7a}
+  .lamp.mine::after{content:"나";position:absolute;top:6px;right:8px;font-size:10px;color:#0b0f24;background:var(--acc2);border-radius:6px;padding:1px 5px;font-weight:800}
+  .lamp.on{filter:none}
+  .lamp.blue.on{background:#17255e;border-color:#5f88ff;box-shadow:0 0 26px rgba(79,123,255,.7),inset 0 0 18px rgba(79,123,255,.35)}
+  .lamp.blue.on .ldot{background:#7ea0ff;box-shadow:0 0 14px #7ea0ff}
+  .lamp.red.on{background:#5e1726;border-color:#ff7a94;box-shadow:0 0 26px rgba(255,92,122,.7),inset 0 0 18px rgba(255,92,122,.35)}
+  .lamp.red.on .ldot{background:#ff9caf;box-shadow:0 0 14px #ff9caf}
+  .lamp.flash{animation:lampflash .45s ease 3}
+  @keyframes lampflash{0%,100%{filter:none}50%{filter:brightness(1.6)}}
+
+  .screen{flex:1;min-width:150px;border-radius:14px;padding:14px 10px;position:relative;overflow:hidden;
+    background:radial-gradient(120% 120% at 50% 0%,#0c2417,#05130c);border:2px solid #123a26;
+    box-shadow:inset 0 0 24px rgba(0,0,0,.7);display:flex;flex-direction:column;justify-content:center;align-items:center;
+    font-family:ui-monospace,Menlo,Consolas,monospace}
+  .screen .scr1{font-size:13px;letter-spacing:1px;color:#3ddc84;text-shadow:0 0 8px rgba(61,220,132,.7)}
+  .screen .scr2{font-size:19px;font-weight:800;margin-top:4px;color:#7bffb0;text-shadow:0 0 12px rgba(80,255,150,.8);text-align:center}
+  .screen.win .scr2{color:#8fff5c;text-shadow:0 0 14px rgba(140,255,90,.9)}
+  .screen.lose .scr2{color:#ff7a7a;text-shadow:0 0 14px rgba(255,90,90,.9)}
+  .screen.draw .scr2{color:#ffd166;text-shadow:0 0 14px rgba(255,200,80,.9)}
+  .scanbar{position:absolute;left:-40%;top:0;height:100%;width:40%;
+    background:linear-gradient(90deg,transparent,rgba(120,255,180,.18),transparent);opacity:0}
+  .screen.scanning .scanbar{opacity:1;animation:scan .5s linear infinite}
+  @keyframes scan{0%{left:-40%}100%{left:100%}}
+
+  .stage{display:flex;align-items:center;justify-content:center;gap:16px;margin:16px 0 6px;min-height:110px}
+  .slotcol{display:flex;flex-direction:column;align-items:center;gap:6px}
+  .slotcol .slabel{font-size:12px;color:var(--mut)}
+  .slot{width:70px;height:90px;border-radius:12px;border:2px dashed #39406b;background:rgba(255,255,255,.02);
+    display:flex;align-items:center;justify-content:center;font-size:38px;font-weight:900}
+  .slot.filled{border-style:solid}
+  .slot.blue{background:linear-gradient(180deg,#2b3f8f,#1d2c66);border-color:#3f57b8;color:#dbe4ff}
+  .slot.red{background:linear-gradient(180deg,#8f2b3f,#661d2c);border-color:#b83f57;color:#ffdbe1}
+  .slot.oppback{background:repeating-linear-gradient(45deg,#2a2f52,#2a2f52 6px,#1c2140 6px,#1c2140 12px);color:transparent;border-color:#39406b;border-style:solid}
+  .vsbadge{font-weight:900;font-size:20px;color:var(--mut)}
+  .drop{animation:drop .35s cubic-bezier(.2,.9,.3,1.4)}
+  @keyframes drop{0%{transform:translateY(-40px);opacity:0}100%{transform:translateY(0);opacity:1}}
+  .waitpulse{animation:pulse 1s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+  .mmain{margin-top:6px}
+  .mbig{width:100%;max-width:280px;display:block;margin:8px auto 0}
+  @media(max-width:520px){ .lamp{flex-basis:74px} .mtitle{font-size:22px} .slot{width:60px;height:78px;font-size:32px} }
 </style>
 </head>
 <body>
@@ -167,18 +226,35 @@
     </div>
   </div>
 
-  <!-- ============ GURYONGTU ============ -->
+  <!-- ============ GURYONGTU (전자 대결장) ============ -->
   <div id="guryong" class="hidden">
-    <div class="card">
-      <div class="row" style="justify-content:space-between">
-        <div class="turnbadge">🐉 구룡투</div>
-        <div class="row"><button id="gMenu">메뉴로</button><button id="gExit">처음으로</button></div>
+    <div class="machine">
+      <div class="mtop">
+        <button class="mbtn" id="gMenu">메뉴로</button>
+        <div class="mtitle">九龍鬪<span>구룡투</span></div>
+        <div class="row" style="gap:6px">
+          <button class="mbtn" id="gMute" title="소리 켜기/끄기">🔊</button>
+          <button class="mbtn" id="gExit">처음으로</button>
+        </div>
       </div>
-      <div id="gInfo" style="margin-top:10px"></div>
-      <div id="gLog" class="loglist"></div>
+      <div class="lamps">
+        <div class="lamp blue" id="lampBlue">
+          <div class="ldot"></div><div class="lname" id="nameBlue">청룡</div><div class="lwin" id="winBlue">0</div><div class="lsub" id="subBlue"></div>
+        </div>
+        <div class="screen">
+          <div class="scr1" id="scr1">구룡투</div>
+          <div class="scr2" id="scr2">대결장 준비</div>
+          <div class="scanbar" id="scanbar"></div>
+        </div>
+        <div class="lamp red" id="lampRed">
+          <div class="ldot"></div><div class="lname" id="nameRed">적룡</div><div class="lwin" id="winRed">0</div><div class="lsub" id="subRed"></div>
+        </div>
+      </div>
+      <div class="stage" id="gStage"></div>
+      <div class="mmain" id="gMain"></div>
+      <div class="loglist" id="gLog"></div>
     </div>
-    <div class="card"><div id="gMain"></div></div>
-    <div class="foot">숫자는 서로 안 보여요 · 매 라운드 승/패/무만 공개 → 대결이 끝나면 전체 공개! · <b>1은 9를 이깁니다</b></div>
+    <div class="foot">숫자는 서로 안 보여요 · 승/패/무만 공개 → 대결이 끝나면 전체 공개! · <b>1은 9를 이깁니다</b></div>
   </div>
 
   <div class="foot">P2P(WebRTC)로 직접 연결 · 서버에 게임 데이터가 저장되지 않아요</div>
@@ -349,11 +425,15 @@ function gNextDuel(){const g=state.guryong;if(g.phase!=='duelover')return;
 }
 
 /* ================= 렌더링 ================= */
+let lastRenderS=null, gPrevView=null;
 function render(s){
-  if(!s){show('lobby');return;}
+  lastRenderS=s;
+  if(!s){show('lobby');gPrevView=null;return;}
+  if(s.view==='guryong' && gPrevView!=='guryong') sfxPower();
   if(s.view==='menu'){renderMenu(s);show('menu');}
   else if(s.view==='yacht'){renderYacht(s);show('yacht');}
   else if(s.view==='guryong'){renderGuryong(s);show('guryong');}
+  gPrevView=s.view;
 }
 function renderMenu(s){
   $('whoLine').textContent=`${s.names[0]}  vs  ${s.names[1]}`;
@@ -362,6 +442,25 @@ function renderMenu(s){
 }
 const nameOf=(s,i)=> i===myIndex?`${s.names[i]}(나)`:s.names[i];
 function menuBtn(el){ if(isHost){el.textContent='메뉴로';el.onclick=()=>localAction({t:'backToMenu'});} else {el.textContent='나가기';el.onclick=leaveRoom;} }
+
+/* ===== 사운드 (합성음 + 한국어 음성) — 저작권 음원 대신 원본 생성음 ===== */
+let audioCtx=null, soundOn=true;
+function ac(){ if(!audioCtx){ try{audioCtx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){return null;} } if(audioCtx.state==='suspended')audioCtx.resume(); return audioCtx; }
+function tone(freq,dur,type,vol,when){ const c=ac(); if(!c||!soundOn)return; const t0=c.currentTime+(when||0); const o=c.createOscillator(),g=c.createGain(); o.type=type||'square'; o.frequency.setValueAtTime(freq,t0); o.connect(g); g.connect(c.destination); g.gain.setValueAtTime(0.0001,t0); g.gain.exponentialRampToValueAtTime(vol||0.14,t0+0.012); g.gain.exponentialRampToValueAtTime(0.0001,t0+dur); o.start(t0); o.stop(t0+dur+0.03); }
+function sfxInsert(){ tone(760,0.07,'square',0.12); tone(1140,0.08,'square',0.09,0.05); }
+function sfxOpp(){ tone(520,0.06,'triangle',0.09); }
+function sfxScan(){ for(let i=0;i<6;i++) tone(360+i*90,0.06,'sawtooth',0.05,i*0.07); }
+function sfxWin(){ [523,659,784,1047].forEach((f,i)=>tone(f,0.2,'triangle',0.16,i*0.1)); }
+function sfxLose(){ [392,349,294,247].forEach((f,i)=>tone(f,0.22,'sine',0.14,i*0.11)); }
+function sfxDraw(){ tone(494,0.16,'square',0.1); tone(494,0.18,'square',0.1,0.2); }
+function sfxPower(){ tone(160,0.5,'sawtooth',0.07); tone(320,0.4,'sawtooth',0.05,0.12); tone(640,0.35,'triangle',0.07,0.28); }
+function say(t){ if(!soundOn)return; try{ const u=new SpeechSynthesisUtterance(t); u.lang='ko-KR'; u.rate=1; u.pitch=1; speechSynthesis.cancel(); speechSynthesis.speak(u); }catch(e){} }
+function bindMute(){ const b=$('gMute'); if(!b)return; b.textContent=soundOn?'🔊':'🔇'; b.onclick=()=>{ soundOn=!soundOn; b.textContent=soundOn?'🔊':'🔇'; if(soundOn)ac(); else { try{speechSynthesis.cancel();}catch(e){} } }; }
+
+let gShownSig=-1, gScanSig=-1, gPrevPhase=null, gPrevOppLocked=false;
+function setScreen(l1,l2,cls){ $('scr1').textContent=l1; $('scr2').textContent=l2; const sc=document.querySelector('.screen'); sc.classList.remove('win','lose','draw','scanning'); if(cls)sc.classList.add(cls); }
+function litLamp(w,flash){ const b=$('lampBlue'),r=$('lampRed'); b.classList.remove('on','flash'); r.classList.remove('on','flash');
+  if(w===0){ b.classList.add('on'); if(flash)b.classList.add('flash'); } else if(w===1){ r.classList.add('on'); if(flash)r.classList.add('flash'); } }
 
 /* ----- 요트 렌더 (+ 슬롯머신 굴림 연출) ----- */
 const FACES=['','⚀','⚁','⚂','⚃','⚄','⚅'];
@@ -440,82 +539,86 @@ function renderYacht(s){
 
 /* ----- 구룡투 렌더 ----- */
 function renderGuryong(s){
-  const g=s.guryong, opp=1-myIndex, myColor=myIndex===0?'blue':'red';
-  // 정보 줄
-  $('gInfo').innerHTML=
-    `<div class="row" style="justify-content:space-between">
-       <div><b>대결 ${g.duel}</b> · 라운드 ${Math.min(g.round,9)}/9</div>
-       <div class="mut">대결 승 (2선승): <b class="me">${s.names[myIndex]} ${g.matchWins[myIndex]}</b> : <b class="them">${g.matchWins[opp]} ${s.names[opp]}</b></div>
-     </div>
-     <div class="status">이번 대결 라운드 승수 — 나 <b>${g.roundWins[myIndex]}</b> : <b>${g.roundWins[opp]}</b> 상대 · 상대 남은 용 ${g.hands[opp].length}개</div>`;
-  // 라운드 결과 칩 (내 관점)
-  $('gLog').innerHTML=g.roundLog.map((w,i)=>{
-    const cls=w===-1?'d':(w===myIndex?'w':'l'); const t=w===-1?'무':(w===myIndex?'승':'패');
-    return `<span class="chip ${cls}">R${i+1} ${t}</span>`;
-  }).join('');
-  menuBtn($('gMenu')); $('gExit').onclick=leaveRoom;
+  const g=s.guryong, opp=1-myIndex, myColor=myIndex===0?'blue':'red', oppColor=opp===0?'blue':'red';
+  if(g.phase==='pick' && g.locked[opp] && !gPrevOppLocked) sfxOpp();   // 상대 장착음
 
-  const M=$('gMain');
+  // 램프: 이번 대결 라운드 승수 + 대결승 + 내 표시
+  $('winBlue').textContent=g.roundWins[0]; $('winRed').textContent=g.roundWins[1];
+  $('subBlue').textContent='대결 '+g.matchWins[0]+'승'; $('subRed').textContent='대결 '+g.matchWins[1]+'승';
+  $('lampBlue').classList.toggle('mine',myIndex===0); $('lampRed').classList.toggle('mine',myIndex===1);
+  $('gLog').innerHTML=g.roundLog.map((w,i)=>{const cls=w===-1?'d':(w===myIndex?'w':'l');const t=w===-1?'무':(w===myIndex?'승':'패');return '<span class="chip '+cls+'">R'+(i+1)+' '+t+'</span>';}).join('');
+  menuBtn($('gMenu')); $('gExit').onclick=leaveRoom; bindMute();
+
+  const M=$('gMain'), ST=$('gStage'), rnd=Math.min(g.round,9), l1=`대결 ${g.duel} · 라운드 ${rnd}/9`;
+  const mySlot=num=> num!=null ? `<div class="slot filled ${myColor} drop">${num}</div>` : `<div class="slot">?</div>`;
+  const oppBack=locked=> locked ? `<div class="slot filled oppback">龍</div>` : `<div class="slot waitpulse">···</div>`;
+  const stage=(o,m)=>`<div class="slotcol"><div class="slabel">상대 · ${s.names[opp]}</div>${o}</div><div class="vsbadge">VS</div><div class="slotcol"><div class="slabel">나 · ${s.names[myIndex]}</div>${m}</div>`;
+
   if(g.phase==='pick'){
+    litLamp(-1);
     if(!g.locked[myIndex]){
-      M.innerHTML=`<div class="center" style="font-weight:700;margin-bottom:6px">용을 하나 선택하세요</div>
-        <div class="center mut" style="font-size:13px">${g.locked[opp]?'상대는 이미 제출했어요.':'상대도 동시에 고르는 중…'}</div>
-        <div class="tiles" id="gHand"></div>`;
+      setScreen(l1, g.locked[opp]?'상대 제출 완료':'용을 올리세요');
+      ST.innerHTML=stage(oppBack(g.locked[opp]), `<div class="slot">?</div>`);
+      M.innerHTML='<div class="center mut" style="font-size:13px;margin-bottom:6px">낼 용을 골라 대결장에 올리세요</div><div class="tiles" id="gHand"></div>';
       const hand=$('gHand');
-      g.hands[myIndex].forEach(n=>{
-        const el=document.createElement('div');el.className='tile '+myColor;
-        el.innerHTML=`${n}<small>龍</small>`;
-        el.onclick=()=>localAction({t:'g_pick',tile:n});
-        hand.appendChild(el);
-      });
+      g.hands[myIndex].forEach(n=>{ const el=document.createElement('div'); el.className='tile '+myColor; el.innerHTML=n+'<small>龍</small>'; el.onclick=()=>{ sfxInsert(); localAction({t:'g_pick',tile:n}); }; hand.appendChild(el); });
     }else{
-      M.innerHTML=`<div class="center">
-        <div style="font-weight:700;margin-bottom:8px">제출 완료 — 상대를 기다리는 중…</div>
-        <div class="vs"><div class="tile face ${myColor}">${g.pending[myIndex]}<small>내 용</small></div></div>
-        <div class="mut">${g.locked[opp]?'상대도 제출! 결과 처리 중…':'상대가 아직 고르는 중이에요.'}</div></div>`;
+      setScreen(l1, g.locked[opp]?'판정 준비...':'상대 대기중');
+      ST.innerHTML=stage(oppBack(g.locked[opp]), mySlot(g.pending[myIndex]));
+      M.innerHTML='<div class="center mut waitpulse">제출 완료 — 상대를 기다리는 중…</div>';
     }
   }
   else if(g.phase==='result'){
-    const r=g.lastResult, w=r.winner;
-    const label=w===-1?'무승부':(w===myIndex?'이번 라운드 승리!':'이번 라운드 패배');
-    const col=w===-1?'var(--mut)':(w===myIndex?'var(--good)':'var(--bad)');
-    M.innerHTML=`<div class="banner" style="color:${col}">${label}</div>
-      <div class="vs">
-        <div class="tile face ${myColor}">${r.nums[myIndex]}<small>나</small></div>
-        <div style="font-weight:800">VS</div>
-        <div class="tile face back">?<small>상대</small></div>
-      </div>
-      <div class="center mut" style="font-size:13px">상대가 낸 숫자는 대결이 끝나면 공개돼요.</div>
-      <div class="center" style="margin-top:14px"><button class="primary" id="gNextBtn">다음 라운드 ▶</button></div>`;
-    $('gNextBtn').onclick=()=>localAction({t:'g_next'});
+    const r=g.lastResult, w=r.winner, sig=g.duel*100+r.round;
+    if(gShownSig!==sig){                       // 판정(스캔) 단계
+      setScreen(l1,'판정 중...','scanning'); litLamp(-1);
+      ST.innerHTML=stage(oppBack(true), mySlot(r.nums[myIndex])); M.innerHTML='';
+      if(gScanSig!==sig){
+        gScanSig=sig; sfxScan();
+        setTimeout(()=>{ gShownSig=sig;
+          if(w===-1)sfxDraw(); else if(w===myIndex)sfxWin(); else sfxLose();
+          say(w===-1?'무승부':(w===0?'청룡 승리':'적룡 승리'));
+          render(lastRenderS);
+        },950);
+      }
+    }else{                                     // 결과 공개
+      const cls=w===-1?'draw':(w===myIndex?'win':'lose');
+      setScreen(l1, w===-1?'무승부':(w===0?'청룡 승리!':'적룡 승리!'), cls);
+      litLamp(w,true);
+      ST.innerHTML=stage(oppBack(true), mySlot(r.nums[myIndex]));
+      M.innerHTML='<button class="primary mbig" id="gNextBtn">다음 라운드 ▶</button><div class="center mut" style="font-size:12px;margin-top:6px">상대가 낸 숫자는 대결이 끝나면 공개돼요</div>';
+      $('gNextBtn').onclick=()=>localAction({t:'g_next'});
+    }
   }
   else if(g.phase==='duelover'||g.phase==='matchover'){
     const dr=g.duelResult;
-    const dlabel=dr.winner===-1?'이번 대결 무승부':(dr.winner===myIndex?'이번 대결 승리! 🎉':'이번 대결 패배');
-    let html=`<div class="banner" style="color:var(--acc2)">${dlabel}</div>
-      <div class="center mut">라운드 승수 ${dr.roundWins[myIndex]} : ${dr.roundWins[opp]}</div>
-      <table class="rtable" style="margin-top:12px"><tr><th>R</th><th>${nameOf(s,myIndex)}</th><th>${nameOf(s,opp)}</th><th>결과</th></tr>`;
-    for(let i=0;i<g.plays[myIndex].length;i++){
-      const a=g.plays[myIndex][i], b=g.plays[opp][i], w=g.roundLog[i];
-      const t=w===-1?'무':(w===myIndex?'승':'패');
-      html+=`<tr><td>${i+1}</td><td>${a}</td><td>${b}</td><td>${t}</td></tr>`;
+    litLamp(dr.winner,false);
+    if(gPrevPhase!==g.phase){
+      if(g.phase==='matchover'){ if(g.champion===myIndex)sfxWin(); else sfxLose(); say(g.champion===0?'청룡 최종 우승':'적룡 최종 우승'); }
+      else { if(dr.winner===-1)sfxDraw(); else if(dr.winner===myIndex)sfxWin(); else sfxLose(); say(dr.winner===-1?'대결 무승부':(dr.winner===0?'청룡 대결 승리':'적룡 대결 승리')); }
     }
+    const scr2 = g.phase==='matchover' ? (g.champion===0?'청룡 최종 우승':'적룡 최종 우승') : (dr.winner===-1?'대결 무승부':(dr.winner===0?'청룡 대결 승':'적룡 대결 승'));
+    setScreen(l1, scr2, g.phase==='matchover'?(g.champion===myIndex?'win':'lose'):(dr.winner===myIndex?'win':(dr.winner===-1?'draw':'lose')));
+    ST.innerHTML='';
+    const dlabel=dr.winner===-1?'이번 대결 무승부':(dr.winner===myIndex?'이번 대결 승리! 🎉':'이번 대결 패배');
+    let html=`<div class="banner">${dlabel}</div><div class="center mut">라운드 승수 ${dr.roundWins[myIndex]} : ${dr.roundWins[opp]} · 이제 숫자 공개!</div>
+      <table class="rtable" style="margin-top:12px;width:100%"><tr><th>R</th><th>${s.names[myIndex]}</th><th>${s.names[opp]}</th><th>결과</th></tr>`;
+    for(let i=0;i<g.plays[myIndex].length;i++){ const a=g.plays[myIndex][i],b=g.plays[opp][i],ww=g.roundLog[i];const t=ww===-1?'무':(ww===myIndex?'승':'패'); html+=`<tr><td>${i+1}</td><td>${a}</td><td>${b}</td><td>${t}</td></tr>`; }
     html+='</table>';
     if(g.phase==='matchover'){
-      const champ=g.champion===myIndex?'🏆 최종 우승! 축하해요!':'최종 패배 — 다음 판을 노려요';
-      html+=`<div class="banner" style="margin-top:14px;color:var(--good)">${champ}</div>
-        <div class="center" style="margin-top:8px">`+
-        (isHost?`<button class="primary" id="gRestart">새 게임</button> `:'')+`<button id="gEnd"></button></div>`;
+      html+=`<div class="banner" style="color:var(--acc2);margin-top:12px">${g.champion===myIndex?'🏆 최종 우승! 축하해요!':'최종 패배 — 다음 판을 노려요'}</div><div class="center" style="margin-top:8px">`+(isHost?'<button class="primary" id="gRestart">새 게임</button> ':'')+'<button id="gEnd"></button></div>';
     }else{
-      html+=`<div class="center" style="margin-top:14px">`+
-        (isHost?`<button class="primary" id="gND">다음 대결 ▶</button>`:`<span class="mut">방장이 다음 대결을 시작하길 기다리는 중…</span>`)+
-        ` <button id="gEnd"></button></div>`;
+      html+='<div class="center" style="margin-top:12px">'+(isHost?'<button class="primary" id="gND">다음 대결 ▶</button>':'<span class="mut">방장이 다음 대결을 시작하길 기다리는 중…</span>')+' <button id="gEnd"></button></div>';
     }
     M.innerHTML=html;
     if(g.phase==='matchover'&&isHost)$('gRestart').onclick=()=>localAction({t:'g_restart'});
     if(g.phase==='duelover'&&isHost)$('gND').onclick=()=>localAction({t:'g_nextduel'});
     menuBtn($('gEnd'));
   }
+
+  gPrevOppLocked = (g.phase==='pick') ? g.locked[opp] : false;
+  gPrevPhase = g.phase;
+  if(g.duel===1 && g.round===1 && g.phase==='pick' && g.plays[0].length===0 && g.plays[1].length===0){ gShownSig=-1; gScanSig=-1; }
 }
 
 /* ================= 바인딩 ================= */

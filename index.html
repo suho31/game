@@ -151,6 +151,19 @@
   .hand-rack.opponent:not(.revealed){transform:rotate(180deg)}
   .hand-rack.opponent{margin-bottom:2px}
   .hand-rack .tile.back{cursor:default;pointer-events:none}
+  /* ---- 흑과 백: 홀수=백, 짝수=흑 (타일/현재/기록 공통) ---- */
+  .tile.tw,.slot.tw,.history-card.tw{background:linear-gradient(180deg,#f8faff,#dde3f1);color:#161a26;border-color:#cbd2e4}
+  .tile.tb,.slot.tb,.history-card.tb{background:linear-gradient(180deg,#333a4d,#111420);color:#eef1fa;border-color:#4b5268}
+  .tile.tw small,.history-card.tw small{opacity:.55}
+  .tile.tb small,.history-card.tb small{opacity:.6}
+  /* 플레이어 구분 테두리(청룡=p0, 적룡=p1) */
+  .tile.p0,.slot.p0,.history-card.p0{outline:2px solid rgba(90,130,255,.85);outline-offset:-2px}
+  .tile.p1,.slot.p1,.history-card.p1{outline:2px solid rgba(255,92,122,.85);outline-offset:-2px}
+  /* 색은 공개, 숫자는 숨김(龍 표시) */
+  .history-card.hidenum{font-size:clamp(12px,2.6vw,20px);font-weight:700}
+  .history-card.hidenum.tw{color:#8b93ab} .history-card.hidenum.tb{color:#aeb6cf}
+  .slot.hidenum{font-size:34px}
+  .slot.hidenum.tw{color:#8b93ab} .slot.hidenum.tb{color:#c2c9e0}
   .mmain{margin-top:6px}
   .mbig{width:100%;max-width:280px;display:block;margin:8px auto 0}
   @media(max-width:520px){
@@ -314,15 +327,17 @@ function leaveRoom(){ try{conn&&conn.close();}catch(e){} try{peer&&peer.destroy(
 function pushState(){ if(conn&&conn.open) conn.send({type:'state',state:sanitize(state,1)}); render(sanitize(state,0)); }
 function localAction(a){ if(isHost){ applyAction(0,a); pushState(); } else if(conn&&conn.open){ conn.send({type:'action',action:a}); } }
 
-/* 상대의 비밀(구룡투 낸 숫자/손패/이번 픽)을 가림 */
+/* 흑과 백: 홀수=백('W'), 짝수=흑('B') */
+const parityTok=n=> (n%2===1?'W':'B');
+/* 상대 비밀 가림 — 낸 타일은 '색(홀짝)'만 공개하고 숫자는 숨김. 손패·선택중 타일은 완전 비공개 */
 function sanitize(s,forIndex){
   const cp=JSON.parse(JSON.stringify(s)); const g=cp.guryong;
   if(g && !g.reveal){
     const opp=1-forIndex;
-    g.plays[opp]=g.plays[opp].map(()=>null);
-    g.hands[opp]=g.hands[opp].map(()=>null);
-    g.pending[opp]=null;
-    if(g.lastResult&&g.lastResult.nums) g.lastResult.nums[opp]=null;
+    g.plays[opp]=g.plays[opp].map(n=> n==null?null:parityTok(n));   // 판정된 라운드: 색 공개
+    g.hands[opp]=g.hands[opp].map(()=>null);                        // 손패: 비공개
+    g.pending[opp]=null;                                            // 선택중: 비공개(색 유출 방지)
+    if(g.lastResult&&g.lastResult.nums) g.lastResult.nums[opp]= g.lastResult.nums[opp]==null?null:parityTok(g.lastResult.nums[opp]);
   }
   return cp;
 }
@@ -546,27 +561,29 @@ function renderGuryong(s){
   const settledCount=g.phase==='result'?Math.max(0,g.plays[myIndex].length-1):g.plays[myIndex].length;
   if(gPeekRound>=settledCount||revealAll)gPeekRound=-1;
 
-  const slotBack=()=>'<div class="slot filled oppback">龍</div>';
+  const colClass=v=> v==null?null:(typeof v==='number'?(v%2?'tw':'tb'):(v==='W'?'tw':'tb'));  // 홀=백(tw) 짝=흑(tb)
+  const slotGeneric=()=>'<div class="slot filled oppback">龍</div>';                             // 색까지 비공개
+  const slotColor=(v,player)=>{ const c=colClass(v); if(!c)return slotGeneric(); const known=(typeof v==='number')&&revealAll; return `<div class="slot filled ${c} p${player} ${known?'':'hidenum'}">${known?v:'龍'}</div>`; };
   const slotEmpty=(waiting=false)=>`<div class="slot${waiting?' waitpulse':''}">${waiting?'···':'?'}</div>`;
-  const handCard=(n,color,back=false,pickable=false)=>`<div class="tile ${back?'back':color}"${pickable?` data-pick="${n}"`:''}>${back?'龍':`${n}<small>龍</small>`}</div>`;
+  const handCard=(v,player,back=false,pickable=false)=>{ if(back)return `<div class="tile back p${player}">龍</div>`; const c=colClass(v); return `<div class="tile ${c} p${player}"${pickable?` data-pick="${v}"`:''}>${v}<small>龍</small></div>`; };
 
   const visibleMyHand=g.hands[myIndex].filter(n=>!(g.phase==='pick'&&g.locked[myIndex]&&n===g.pending[myIndex]));
   let visibleOppHand=g.hands[opp].slice();
   if(g.phase==='pick'&&g.locked[opp])visibleOppHand=visibleOppHand.slice(0,-1);
   const myCanPick=g.phase==='pick'&&!g.locked[myIndex];
-  const opponentRack=visibleOppHand.map(n=>handCard(n,oppColor,!revealAll)).join('');
-  const myRack=visibleMyHand.map(n=>handCard(n,myColor,false,myCanPick)).join('');
+  const opponentRack=visibleOppHand.map(n=>handCard(n,opp,!revealAll)).join('');
+  const myRack=visibleMyHand.map(n=>handCard(n,myIndex,false,myCanPick)).join('');
 
   const justSettled=gPrevPhase==='result'&&g.phase!=='result'&&settledCount>0;
   const historyCard=(player,i)=>{
     if(i>=settledCount)return `<div class="history-card empty" data-round="${i+1}"></div>`;
-    const color=player===0?'blue':'red', mine=player===myIndex;
-    const show=revealAll||(mine&&gPeekRound===i);
+    const v=g.plays[player][i], mine=player===myIndex, c=colClass(v), pc='p'+player;
     const settle=justSettled&&i===settledCount-1?(player===opp&&!revealAll?' settle-opponent':' settle-mine'):'';
-    if(show)return `<div class="history-card ${color}${settle}">${g.plays[player][i]}</div>`;
+    const showNum=revealAll||(mine&&gPeekRound===i);
+    if(showNum&&typeof v==='number')return `<div class="history-card ${c} ${pc}${settle}">${v}</div>`;   // 색+숫자
     const peek=mine?' peekable':'';
     const data=mine?` data-peek-round="${i}" role="button" aria-label="${i+1}라운드 내 카드 잠깐 보기"`:'';
-    return `<div class="history-card back${peek}${settle}"${data}>龍</div>`;
+    return `<div class="history-card ${c?c+' hidenum':'back'} ${pc}${peek}${settle}"${data}>龍</div>`;      // 색만, 숫자 숨김
   };
   const boardRow=player=>Array.from({length:9},(_,i)=>historyCard(player,i)).join('');
   const resultLamp=(player,i,visibleLogCount)=>{
@@ -600,11 +617,11 @@ function renderGuryong(s){
   if(g.phase==='pick'){
     if(!g.locked[myIndex]){
       setScreen(l1, g.locked[opp]?'상대 제출 완료':'용을 올리세요');
-      renderArena(g.locked[opp]?slotBack():slotEmpty(),slotEmpty(),g.roundLog.length);
+      renderArena(g.locked[opp]?slotGeneric():slotEmpty(),slotEmpty(),g.roundLog.length);
       M.innerHTML='<div class="center mut" style="font-size:13px">아래의 내 패에서 낼 용을 선택하세요</div>';
     }else{
       setScreen(l1, g.locked[opp]?'판정 준비...':'상대 대기중');
-      renderArena(g.locked[opp]?slotBack():slotEmpty(true),slotBack(),g.roundLog.length);
+      renderArena(g.locked[opp]?slotGeneric():slotEmpty(true),slotColor(g.pending[myIndex],myIndex),g.roundLog.length);
       M.innerHTML='<div class="center mut waitpulse">제출 완료 — 상대를 기다리는 중…</div>';
     }
   }
@@ -612,7 +629,7 @@ function renderGuryong(s){
     const r=g.lastResult, w=r.winner, sig=g.duel*100+r.round;
     if(gShownSig!==sig){                       // 판정(스캔) 단계
       setScreen(l1,'판정 중...','scanning');
-      renderArena(slotBack(),slotBack(),Math.max(0,g.roundLog.length-1)); M.innerHTML='';
+      renderArena(slotGeneric(),slotGeneric(),Math.max(0,g.roundLog.length-1)); M.innerHTML='';
       if(gScanSig!==sig){
         gScanSig=sig; sfxScan();
         setTimeout(()=>{ gShownSig=sig;
@@ -625,7 +642,7 @@ function renderGuryong(s){
       const cls=w===-1?'draw':(w===myIndex?'win':'lose');
       const rem=9-g.round, willEnd=g.round>=9||g.roundWins[0]>g.roundWins[1]+rem||g.roundWins[1]>g.roundWins[0]+rem;
       setScreen(l1, w===-1?'무승부':(w===0?'청룡 승리!':'적룡 승리!'), cls);
-      renderArena(slotBack(),slotBack(),g.roundLog.length);
+      renderArena(slotColor(r.nums[opp],opp),slotColor(r.nums[myIndex],myIndex),g.roundLog.length);
       M.innerHTML=`<button class="primary mbig" id="gNextBtn">${willEnd?'전체 카드 보기':'다음 라운드 ▶'}</button><div class="center mut" style="font-size:12px;margin-top:6px">${willEnd?'사용한 카드를 모두 공개합니다':'표시등으로 결과를 확인하세요. 다음 라운드에는 카드가 기록 칸으로 이동해요'}</div>`;
       $('gNextBtn').onclick=()=>localAction({t:'g_next'});
     }

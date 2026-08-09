@@ -77,6 +77,21 @@
   .toast.show{opacity:1}
   .biglink{word-break:break-all;font-size:12px}
 
+  /* ---- 실시간 이모지 반응 ---- */
+  .reaction-bar{display:flex;justify-content:center;align-items:center;gap:7px;margin:10px auto 0;max-width:330px}
+  .reaction-btn{flex:0 1 42px;width:42px;height:42px;padding:0;border-radius:50%;font-size:22px;line-height:1;background:#171d35;border-color:#353e69;box-shadow:0 4px 10px rgba(0,0,0,.24);touch-action:manipulation}
+  .reaction-btn:hover{background:#293154;border-color:#566493;transform:translateY(-2px)}
+  .reaction-btn:active{transform:scale(.9)}
+  .reaction-layer{position:fixed;inset:0;z-index:100;overflow:hidden;pointer-events:none}
+  .reaction-pop{position:absolute;left:var(--x);bottom:var(--y);font-size:var(--size);line-height:1;opacity:0;filter:drop-shadow(0 5px 8px rgba(0,0,0,.35));will-change:transform,opacity;animation:reactionFloat var(--duration) cubic-bezier(.2,.65,.3,1) forwards}
+  @keyframes reactionFloat{
+    0%{opacity:0;transform:translate(-50%,0) rotate(0deg) scale(.65)}
+    12%{opacity:.86;transform:translate(calc(-50% + var(--d1)), -6vh) rotate(var(--r1)) scale(1)}
+    48%{opacity:.8;transform:translate(calc(-50% + var(--d2)), -25vh) rotate(var(--r2)) scale(1.08)}
+    78%{opacity:.62;transform:translate(calc(-50% + var(--d1)), -43vh) rotate(var(--r3)) scale(1.14)}
+    100%{opacity:0;transform:translate(calc(-50% + var(--drift)), var(--rise)) rotate(var(--rotation)) scale(1.2)}
+  }
+
   /* ---- guryong ---- */
   .tile{width:56px;height:72px;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:800;font-size:26px;border:2px solid var(--line);background:var(--panel2);cursor:pointer;user-select:none;box-shadow:0 5px 12px rgba(0,0,0,.3)}
   .tile small{font-size:12px;font-weight:600;opacity:.7}
@@ -169,6 +184,7 @@
   @media(max-width:520px){
     .machine{padding-left:9px;padding-right:9px}.mtitle{font-size:20px}.screen{min-width:0;padding-left:5px;padding-right:5px}.screen .scr2{font-size:16px}
     .slot{width:56px;height:72px;font-size:30px}.current-zone{min-height:82px}.arena-board{padding:8px}.board-row,.lamp-row{gap:3px}.hand-rack{gap:4px}.hand-rack .tile small{font-size:9px}
+    .reaction-bar{gap:5px}.reaction-btn{flex-basis:38px;width:38px;height:38px;font-size:20px}
   }
 </style>
 </head>
@@ -237,6 +253,7 @@
       <div class="center" style="margin-top:14px">
         <button class="primary" id="yRoll" style="min-width:200px">굴리기</button>
         <div class="status" id="yStatus"></div>
+        <div class="reaction-bar" data-reaction-bar></div>
       </div>
     </div>
     <div class="card" style="overflow-x:auto">
@@ -265,12 +282,14 @@
       </div>
       <div class="stage" id="gStage"></div>
       <div class="mmain" id="gMain"></div>
+      <div class="reaction-bar" data-reaction-bar></div>
     </div>
     <div class="foot">제출한 카드는 뒷면으로 놓여요 · 내 지난 카드는 터치하면 잠깐 확인할 수 있어요 · <b>1은 9를 이깁니다</b></div>
   </div>
 
   <div class="foot">P2P(WebRTC)로 직접 연결 · 서버에 게임 데이터가 저장되지 않아요</div>
 </div>
+<div class="reaction-layer" id="reactionLayer" aria-hidden="true"></div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -282,6 +301,56 @@ let state=null;                 // 호스트만 전체 state 보유
 function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1900);}
 function show(id){['lobby','menu','yacht','guryong'].forEach(v=>$(v).classList.toggle('hidden', v!==id));}
 function code4(){return String(Math.floor(1000+Math.random()*9000));}  // 숫자 4자리
+
+/* ================= 실시간 이모지 반응 ================= */
+const REACTION_EMOJIS=['❤️','😝','🤬','💤','🔞','💩'];
+const REACTION_LABELS={'❤️':'하트','😝':'메롱','🤬':'화남','💤':'졸림','🔞':'19금','💩':'똥'};
+const clampNum=(v,min,max,fallback)=>{v=Number(v);return Number.isFinite(v)?Math.min(max,Math.max(min,v)):fallback;};
+function makeReaction(emoji){
+  return{
+    emoji,
+    x:8+Math.random()*84,
+    y:7+Math.random()*25,
+    size:30+Math.random()*24,
+    duration:1700+Math.random()*1000,
+    drift:-13+Math.random()*26,
+    d1:-7+Math.random()*14,
+    d2:-10+Math.random()*20,
+    rise:58+Math.random()*24,
+    rotation:-30+Math.random()*60
+  };
+}
+function normalizeReaction(raw){
+  if(!raw||!REACTION_EMOJIS.includes(raw.emoji))return null;
+  return{
+    emoji:raw.emoji,
+    x:clampNum(raw.x,5,95,50),y:clampNum(raw.y,4,40,12),size:clampNum(raw.size,26,60,40),
+    duration:clampNum(raw.duration,1300,3200,2200),drift:clampNum(raw.drift,-18,18,0),
+    d1:clampNum(raw.d1,-12,12,0),d2:clampNum(raw.d2,-15,15,0),rise:clampNum(raw.rise,48,90,65),
+    rotation:clampNum(raw.rotation,-45,45,0)
+  };
+}
+function showReaction(raw){
+  const r=normalizeReaction(raw),layer=$('reactionLayer');if(!r||!layer)return;
+  while(layer.childElementCount>=40)layer.firstElementChild.remove();
+  const el=document.createElement('div');el.className='reaction-pop';el.textContent=r.emoji;
+  const st=el.style,rot=r.rotation;
+  st.setProperty('--x',r.x+'vw');st.setProperty('--y',r.y+'vh');st.setProperty('--size',r.size+'px');
+  st.setProperty('--duration',r.duration+'ms');st.setProperty('--drift',r.drift+'vw');
+  st.setProperty('--d1',r.d1+'vw');st.setProperty('--d2',r.d2+'vw');st.setProperty('--rise',-r.rise+'vh');
+  st.setProperty('--rotation',rot+'deg');st.setProperty('--r1',(-rot*.25)+'deg');st.setProperty('--r2',(rot*.35)+'deg');st.setProperty('--r3',(rot*.7)+'deg');
+  layer.appendChild(el);el.addEventListener('animationend',()=>el.remove(),{once:true});setTimeout(()=>el.remove(),r.duration+500);
+}
+function sendReaction(emoji){
+  if(!REACTION_EMOJIS.includes(emoji))return;
+  const reaction=makeReaction(emoji);showReaction(reaction);
+  try{if(conn&&conn.open)conn.send({type:'reaction',reaction});}catch(e){}
+}
+function initReactionBars(){
+  document.querySelectorAll('[data-reaction-bar]').forEach(bar=>{
+    REACTION_EMOJIS.forEach(emoji=>{const b=document.createElement('button');b.type='button';b.className='reaction-btn';b.textContent=emoji;b.setAttribute('aria-label',REACTION_LABELS[emoji]+' 반응 보내기');b.onclick=()=>sendReaction(emoji);bar.appendChild(b);});
+  });
+}
 
 /* ================= 연결 (PeerJS, 방장=권위) ================= */
 function createRoom(){
@@ -302,6 +371,7 @@ function setupHostConn(){
   conn.on('open',()=>{ initState(); pushState(); });
   conn.on('data',msg=>{
     if(msg.type==='hello'){ state.names[1]=msg.name||'친구'; pushState(); }
+    else if(msg.type==='reaction'){ showReaction(msg.reaction); }
     else if(msg.type==='action'){ applyAction(1,msg.action); pushState(); }
   });
   conn.on('close',()=>toast('상대와 연결이 끊겼어요'));
@@ -315,7 +385,7 @@ function joinRoom(code){
   peer.on('open',()=>{
     conn=peer.connect(PREFIX+code,{reliable:true});
     conn.on('open',()=>{ $('joinStatus').textContent='연결됨! 방장이 게임 고르는 중…'; conn.send({type:'hello',name:myName}); });
-    conn.on('data',msg=>{ if(msg.type==='state'){ state=msg.state; render(state); } });
+    conn.on('data',msg=>{ if(msg.type==='state'){ state=msg.state; render(state); } else if(msg.type==='reaction'){ showReaction(msg.reaction); } });
     conn.on('close',()=>toast('상대와 연결이 끊겼어요'));
     conn.on('error',()=>{ $('joinStatus').textContent='연결 실패 — 코드/네트워크를 확인하세요.'; });
   });
@@ -681,6 +751,7 @@ $('joinCode').addEventListener('input',e=>e.target.value=e.target.value.replace(
 $('joinCode').addEventListener('keydown',e=>{if(e.key==='Enter')joinRoom($('joinCode').value);});
 $('pickYacht').onclick=()=>localAction({t:'chooseGame',game:'yacht'});
 $('pickGuryong').onclick=()=>localAction({t:'chooseGame',game:'guryong'});
+initReactionBars();
 (function(){const j=new URLSearchParams(location.search).get('join');if(j){$('joinCode').value=String(j).replace(/\D/g,'');toast('코드가 입력됐어요. 이름 적고 참가!');}})();
 </script>
 </body>

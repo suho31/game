@@ -403,14 +403,14 @@ function localAction(a){ if(isHost){ applyAction(0,a); pushState(); } else if(co
 
 /* 흑과 백: 홀수=백('W'), 짝수=흑('B') */
 const parityTok=n=> (n%2===1?'W':'B');
-/* 상대 비밀 가림 — 낸 타일은 '색(홀짝)'만 공개하고 숫자는 숨김. 손패·선택중 타일은 완전 비공개 */
+/* 상대 비밀 가림 — 제출·판정된 타일은 색(홀짝)만 공개하고 숫자는 숨김 */
 function sanitize(s,forIndex){
   const cp=JSON.parse(JSON.stringify(s)); const g=cp.guryong;
   if(g && !g.reveal){
     const opp=1-forIndex;
     g.plays[opp]=g.plays[opp].map(n=> n==null?null:parityTok(n));   // 판정된 라운드: 색 공개
     g.hands[opp]=g.hands[opp].map(()=>null);                        // 손패: 비공개
-    g.pending[opp]=null;                                            // 선택중: 비공개(색 유출 방지)
+    g.pending[opp]=g.pending[opp]==null?null:parityTok(g.pending[opp]); // 제출 칸: 색만 공개
     if(g.lastResult&&g.lastResult.nums) g.lastResult.nums[opp]= g.lastResult.nums[opp]==null?null:parityTok(g.lastResult.nums[opp]);
   }
   return cp;
@@ -477,22 +477,22 @@ const grand=sh=>{let t=bonus(sh);CATS.forEach(c=>t+=(sh[c.k]||0));return t;};
 
 /* ---------------- 구룡투 ---------------- */
 function newGuryong(){return{
-  phase:'pick', duel:1, matchWins:[0,0], round:1,
+  phase:'pick', duel:1, matchWins:[0,0], round:1, lead:0, pickTurn:0,
   hands:[[1,2,3,4,5,6,7,8,9],[1,2,3,4,5,6,7,8,9]],
   plays:[[],[]], roundWins:[0,0], pending:[null,null], locked:[false,false],
   roundLog:[], lastResult:null, reveal:false, duelResult:null, champion:null
 };}
-function gPick(pi,tile){const g=state.guryong;if(!g||g.phase!=='pick'||g.locked[pi]||!g.hands[pi].includes(tile))return;
+function gPick(pi,tile){const g=state.guryong;if(!g||g.phase!=='pick'||g.pickTurn!==pi||g.locked[pi]||!g.hands[pi].includes(tile))return;
   g.pending[pi]=tile;g.locked[pi]=true;
-  if(g.locked[0]&&g.locked[1])gResolve();}
+  if(g.locked[pi^1])gResolve();else g.pickTurn=pi^1;}
 function gResolve(){const g=state.guryong;const a=g.pending[0],b=g.pending[1];
   g.plays[0].push(a);g.plays[1].push(b);
   g.hands[0]=g.hands[0].filter(x=>x!==a);g.hands[1]=g.hands[1].filter(x=>x!==b);
   let w; if(a===b)w=-1; else if(a===1&&b===9)w=0; else if(b===1&&a===9)w=1; else w=(a>b?0:1);
-  if(w>=0)g.roundWins[w]++;
+  if(w>=0){g.roundWins[w]++;g.lead=w;}
   g.roundLog.push(w);
   g.lastResult={winner:w,nums:[a,b],round:g.round};
-  g.pending=[null,null];g.locked=[false,false];
+  g.pending=[null,null];g.locked=[false,false];g.pickTurn=null;
   g.phase='result';
 }
 function duelDecided(){const g=state.guryong;const rem=9-g.round;const[w0,w1]=g.roundWins;
@@ -504,12 +504,13 @@ function gNext(){const g=state.guryong;if(g.phase!=='result')return;
     if(winner>=0)g.matchWins[winner]++;
     if(g.matchWins[0]>=2||g.matchWins[1]>=2){g.phase='matchover';g.champion=g.matchWins[0]>=2?0:1;}
     else g.phase='duelover';
-  } else { g.round++; g.phase='pick'; }
+  } else { g.round++; g.phase='pick';g.pickTurn=g.lead; }
 }
 function gNextDuel(){const g=state.guryong;if(g.phase!=='duelover')return;
+  const starter=g.duelResult&&g.duelResult.winner>=0?g.duelResult.winner:g.lead;
   g.duel++; g.round=1; g.hands=[[1,2,3,4,5,6,7,8,9],[1,2,3,4,5,6,7,8,9]];
   g.plays=[[],[]]; g.roundWins=[0,0]; g.pending=[null,null]; g.locked=[false,false];
-  g.roundLog=[]; g.lastResult=null; g.reveal=false; g.duelResult=null; g.phase='pick';
+  g.roundLog=[]; g.lastResult=null; g.reveal=false; g.duelResult=null; g.phase='pick';g.lead=starter;g.pickTurn=starter;
 }
 
 /* ================= 렌더링 ================= */
@@ -625,7 +626,7 @@ function renderYacht(s){
 
 /* ----- 구룡투 렌더 ----- */
 function renderGuryong(s){
-  const g=s.guryong, opp=1-myIndex, myColor=myIndex===0?'blue':'red', oppColor=opp===0?'blue':'red';
+  const g=s.guryong, opp=1-myIndex;
   if(g.phase==='pick' && g.locked[opp] && !gPrevOppLocked) sfxOpp();   // 상대 장착음
 
   menuBtn($('gMenu')); $('gExit').onclick=leaveRoom; bindMute();
@@ -644,7 +645,7 @@ function renderGuryong(s){
   const visibleMyHand=g.hands[myIndex].filter(n=>!(g.phase==='pick'&&g.locked[myIndex]&&n===g.pending[myIndex]));
   let visibleOppHand=g.hands[opp].slice();
   if(g.phase==='pick'&&g.locked[opp])visibleOppHand=visibleOppHand.slice(0,-1);
-  const myCanPick=g.phase==='pick'&&!g.locked[myIndex];
+  const myCanPick=g.phase==='pick'&&g.pickTurn===myIndex&&!g.locked[myIndex];
   const opponentRack=visibleOppHand.map(n=>handCard(n,opp,!revealAll)).join('');
   const myRack=visibleMyHand.map(n=>handCard(n,myIndex,false,myCanPick)).join('');
 
@@ -689,21 +690,23 @@ function renderGuryong(s){
   };
 
   if(g.phase==='pick'){
-    if(!g.locked[myIndex]){
-      setScreen(l1, g.locked[opp]?'상대 제출 완료':'용을 올리세요');
-      renderArena(g.locked[opp]?slotGeneric():slotEmpty(),slotEmpty(),g.roundLog.length);
-      M.innerHTML='<div class="center mut" style="font-size:13px">아래의 내 패에서 낼 용을 선택하세요</div>';
+    const oppCurrent=g.locked[opp]?slotColor(g.pending[opp],opp):slotEmpty(g.pickTurn===opp);
+    const myCurrent=g.locked[myIndex]?slotColor(g.pending[myIndex],myIndex):slotEmpty(g.pickTurn===myIndex);
+    renderArena(oppCurrent,myCurrent,g.roundLog.length);
+    if(myCanPick){
+      const responding=g.locked[opp];
+      setScreen(l1,responding?'내 차례 · 용을 올리세요':'선공 · 용을 올리세요');
+      M.innerHTML=`<div class="center mut" style="font-size:13px">${responding?'상대가 낸 카드 색을 보고 내 용을 선택하세요':'아래의 내 패에서 낼 용을 선택하세요'}</div>`;
     }else{
-      setScreen(l1, g.locked[opp]?'판정 준비...':'상대 대기중');
-      renderArena(g.locked[opp]?slotGeneric():slotEmpty(true),slotColor(g.pending[myIndex],myIndex),g.roundLog.length);
-      M.innerHTML='<div class="center mut waitpulse">제출 완료 — 상대를 기다리는 중…</div>';
+      setScreen(l1,g.locked[myIndex]?'제출 완료 · 상대 차례':'상대 선공');
+      M.innerHTML=`<div class="center mut waitpulse">${g.locked[myIndex]?'상대가 카드를 낼 때까지 기다리세요':'상대가 먼저 카드를 고르는 중…'}</div>`;
     }
   }
   else if(g.phase==='result'){
     const r=g.lastResult, w=r.winner, sig=g.duel*100+r.round;
     if(gShownSig!==sig){                       // 판정(스캔) 단계
       setScreen(l1,'판정 중...','scanning');
-      renderArena(slotGeneric(),slotGeneric(),Math.max(0,g.roundLog.length-1)); M.innerHTML='';
+      renderArena(slotColor(r.nums[opp],opp),slotColor(r.nums[myIndex],myIndex),Math.max(0,g.roundLog.length-1)); M.innerHTML='';
       if(gScanSig!==sig){
         gScanSig=sig; sfxScan();
         setTimeout(()=>{ gShownSig=sig;

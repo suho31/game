@@ -136,7 +136,7 @@
   .history-card.back::after{content:'龍';color:#68729f;font-size:clamp(12px,2.6vw,20px)}
   .history-card.peekable{cursor:pointer}
   .history-card.peekable::before{content:'터치';position:absolute;bottom:2px;left:0;right:0;color:#9ba7d9;font-size:8px;font-weight:600;text-align:center}
-  .board-row.opponent .history-card{transform:rotate(180deg)}
+  .board-row.opponent:not(.revealed) .history-card{transform:rotate(180deg)}
   .history-card.settle-opponent{animation:settleOpp .4s cubic-bezier(.2,.8,.3,1.2)}
   .history-card.settle-mine{animation:settleMine .4s cubic-bezier(.2,.8,.3,1.2)}
   @keyframes settleOpp{from{transform:rotate(180deg) translateY(38px);opacity:.2}to{transform:rotate(180deg) translateY(0);opacity:1}}
@@ -148,7 +148,8 @@
   .board-midline{height:1px;margin:5px 0;background:linear-gradient(90deg,transparent,#303858,transparent)}
   .hand-rack{display:flex;justify-content:center;gap:8px;width:100%;min-width:0;margin:8px auto}
   .hand-rack .tile{flex:0 1 56px;width:56px;min-width:0;height:auto;aspect-ratio:.78;font-size:clamp(17px,3vw,26px)}
-  .hand-rack.opponent{transform:rotate(180deg);margin-bottom:2px}
+  .hand-rack.opponent:not(.revealed){transform:rotate(180deg)}
+  .hand-rack.opponent{margin-bottom:2px}
   .hand-rack .tile.back{cursor:default;pointer-events:none}
   .mmain{margin-top:6px}
   .mbig{width:100%;max-width:280px;display:block;margin:8px auto 0}
@@ -561,7 +562,7 @@ function renderGuryong(s){
     if(i>=settledCount)return `<div class="history-card empty" data-round="${i+1}"></div>`;
     const color=player===0?'blue':'red', mine=player===myIndex;
     const show=revealAll||(mine&&gPeekRound===i);
-    const settle=justSettled&&i===settledCount-1?(player===opp?' settle-opponent':' settle-mine'):'';
+    const settle=justSettled&&i===settledCount-1?(player===opp&&!revealAll?' settle-opponent':' settle-mine'):'';
     if(show)return `<div class="history-card ${color}${settle}">${g.plays[player][i]}</div>`;
     const peek=mine?' peekable':'';
     const data=mine?` data-peek-round="${i}" role="button" aria-label="${i+1}라운드 내 카드 잠깐 보기"`:'';
@@ -576,10 +577,10 @@ function renderGuryong(s){
 
   const renderArena=(oppCurrent,myCurrent,visibleLogCount)=>{
     ST.innerHTML=`
-      <div class="hand-rack opponent">${opponentRack}</div>
+      <div class="hand-rack opponent${revealAll?' revealed':''}">${opponentRack}</div>
       <div class="current-zone opponent">${oppCurrent}</div>
       <div class="arena-board">
-        <div class="board-row opponent">${boardRow(opp)}</div>
+        <div class="board-row opponent${revealAll?' revealed':''}">${boardRow(opp)}</div>
         <div class="lamp-row">${lampRow(opp,visibleLogCount)}</div>
         <div class="board-midline"></div>
         <div class="lamp-row">${lampRow(myIndex,visibleLogCount)}</div>
@@ -622,9 +623,10 @@ function renderGuryong(s){
       }
     }else{                                     // 결과 표시(숫자는 계속 비공개)
       const cls=w===-1?'draw':(w===myIndex?'win':'lose');
+      const rem=9-g.round, willEnd=g.round>=9||g.roundWins[0]>g.roundWins[1]+rem||g.roundWins[1]>g.roundWins[0]+rem;
       setScreen(l1, w===-1?'무승부':(w===0?'청룡 승리!':'적룡 승리!'), cls);
       renderArena(slotBack(),slotBack(),g.roundLog.length);
-      M.innerHTML='<button class="primary mbig" id="gNextBtn">다음 라운드 ▶</button><div class="center mut" style="font-size:12px;margin-top:6px">표시등으로 결과를 확인하세요. 다음 라운드에는 카드가 기록 칸으로 이동해요</div>';
+      M.innerHTML=`<button class="primary mbig" id="gNextBtn">${willEnd?'전체 카드 보기':'다음 라운드 ▶'}</button><div class="center mut" style="font-size:12px;margin-top:6px">${willEnd?'사용한 카드를 모두 공개합니다':'표시등으로 결과를 확인하세요. 다음 라운드에는 카드가 기록 칸으로 이동해요'}</div>`;
       $('gNextBtn').onclick=()=>localAction({t:'g_next'});
     }
   }

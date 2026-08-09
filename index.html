@@ -78,7 +78,6 @@
   .biglink{word-break:break-all;font-size:12px}
 
   /* ---- guryong ---- */
-  .tiles{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:10px 0}
   .tile{width:56px;height:72px;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:800;font-size:26px;border:2px solid var(--line);background:var(--panel2);cursor:pointer;user-select:none;box-shadow:0 5px 12px rgba(0,0,0,.3)}
   .tile small{font-size:12px;font-weight:600;opacity:.7}
   .tile:hover{border-color:var(--acc);transform:translateY(-3px)}
@@ -86,12 +85,7 @@
   .tile.red{background:linear-gradient(180deg,#8f2b3f,#661d2c);border-color:#b83f57;color:#ffdbe1}
   .tile.face{width:64px;height:82px;font-size:34px;cursor:default}
   .tile.back{background:repeating-linear-gradient(45deg,#2a2f52,#2a2f52 6px,#232a49 6px,#232a49 12px);color:transparent;cursor:default}
-  .loglist{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
-  .chip{min-width:26px;text-align:center;padding:3px 6px;border-radius:8px;font-size:12px;font-weight:700;border:1px solid var(--line)}
-  .chip.w{background:#12351f;color:var(--good)} .chip.l{background:#3a1414;color:var(--bad)} .chip.d{background:#232a49;color:var(--mut)}
   .banner{font-size:22px;font-weight:800;text-align:center;margin:10px 0}
-  .vs{display:flex;gap:18px;justify-content:center;align-items:center;margin:14px 0}
-  .rtable td{font-variant-numeric:tabular-nums}
 
   /* ---- 전자 대결장(machine) ---- */
   .machine{position:relative;border-radius:22px;padding:16px 16px 18px;
@@ -102,23 +96,7 @@
   .mbtn{padding:8px 12px;font-size:13px;border-radius:10px}
   .mtitle{font-weight:900;font-size:26px;letter-spacing:3px;color:#ffd166;text-shadow:0 0 14px rgba(255,140,60,.5)}
   .mtitle span{display:block;font-size:11px;letter-spacing:6px;color:var(--mut);text-align:center;margin-top:-2px;text-shadow:none}
-  .lamps{display:flex;gap:12px;align-items:stretch;justify-content:center}
-  .lamp{flex:0 0 92px;border-radius:14px;padding:12px 6px;text-align:center;position:relative;
-    border:2px solid #2a3160;background:#171c34;transition:box-shadow .2s,border-color .2s,background .2s;filter:saturate(.5) brightness(.75)}
-  .lamp .ldot{width:20px;height:20px;border-radius:50%;margin:0 auto 6px;background:#3a4270;box-shadow:inset 0 0 4px rgba(0,0,0,.6)}
-  .lamp .lname{font-weight:800;font-size:15px}
-  .lamp .lwin{font-size:30px;font-weight:900;line-height:1.1;font-variant-numeric:tabular-nums}
-  .lamp .lsub{font-size:11px;color:var(--mut);min-height:14px}
-  .lamp.blue{border-color:#31468f} .lamp.blue .ldot{background:#4f7bff}
-  .lamp.red{border-color:#8f3146} .lamp.red .ldot{background:#ff5c7a}
-  .lamp.mine::after{content:"나";position:absolute;top:6px;right:8px;font-size:10px;color:#0b0f24;background:var(--acc2);border-radius:6px;padding:1px 5px;font-weight:800}
-  .lamp.on{filter:none}
-  .lamp.blue.on{background:#17255e;border-color:#5f88ff;box-shadow:0 0 26px rgba(79,123,255,.7),inset 0 0 18px rgba(79,123,255,.35)}
-  .lamp.blue.on .ldot{background:#7ea0ff;box-shadow:0 0 14px #7ea0ff}
-  .lamp.red.on{background:#5e1726;border-color:#ff7a94;box-shadow:0 0 26px rgba(255,92,122,.7),inset 0 0 18px rgba(255,92,122,.35)}
-  .lamp.red.on .ldot{background:#ff9caf;box-shadow:0 0 14px #ff9caf}
-  .lamp.flash{animation:lampflash .45s ease 3}
-  @keyframes lampflash{0%,100%{filter:none}50%{filter:brightness(1.6)}}
+  .lamps{display:flex;align-items:stretch;justify-content:center}
 
   .screen{flex:1;min-width:150px;border-radius:14px;padding:14px 10px;position:relative;overflow:hidden;
     background:radial-gradient(120% 120% at 50% 0%,#0c2417,#05130c);border:2px solid #123a26;
@@ -134,23 +112,53 @@
   .screen.scanning .scanbar{opacity:1;animation:scan .5s linear infinite}
   @keyframes scan{0%{left:-40%}100%{left:100%}}
 
-  .stage{display:flex;align-items:center;justify-content:center;gap:16px;margin:16px 0 6px;min-height:110px}
-  .slotcol{display:flex;flex-direction:column;align-items:center;gap:6px}
-  .slotcol .slabel{font-size:12px;color:var(--mut)}
+  .stage{margin:14px auto 8px;width:100%;max-width:680px;min-width:0}
+  .current-zone{display:flex;flex-direction:column;align-items:center;gap:5px;min-height:100px;justify-content:center}
+  .current-zone .slabel{font-size:11px;color:var(--mut);letter-spacing:.04em}
+  .current-zone.opponent .slot{transform:rotate(180deg)}
   .slot{width:70px;height:90px;border-radius:12px;border:2px dashed #39406b;background:rgba(255,255,255,.02);
     display:flex;align-items:center;justify-content:center;font-size:38px;font-weight:900}
   .slot.filled{border-style:solid}
   .slot.blue{background:linear-gradient(180deg,#2b3f8f,#1d2c66);border-color:#3f57b8;color:#dbe4ff}
   .slot.red{background:linear-gradient(180deg,#8f2b3f,#661d2c);border-color:#b83f57;color:#ffdbe1}
   .slot.oppback{background:repeating-linear-gradient(45deg,#2a2f52,#2a2f52 6px,#1c2140 6px,#1c2140 12px);color:transparent;border-color:#39406b;border-style:solid}
-  .vsbadge{font-weight:900;font-size:20px;color:var(--mut)}
   .drop{animation:drop .35s cubic-bezier(.2,.9,.3,1.4)}
   @keyframes drop{0%{transform:translateY(-40px);opacity:0}100%{transform:translateY(0);opacity:1}}
   .waitpulse{animation:pulse 1s ease-in-out infinite}
   @keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+  .arena-board{width:100%;min-width:0;padding:12px;border:1px solid #303758;border-radius:16px;background:linear-gradient(180deg,#101426,#090c18);box-shadow:inset 0 3px 14px rgba(0,0,0,.65)}
+  .board-row,.lamp-row{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:6px;min-width:0}
+  .board-row.opponent{margin-bottom:7px}
+  .board-row.mine{margin-top:7px}
+  .history-card{position:relative;width:100%;min-width:0;aspect-ratio:.72;padding:0;border-radius:8px;border:1px solid #343b60;background:#11162b;color:var(--txt);display:flex;align-items:center;justify-content:center;font-size:clamp(15px,3.4vw,25px);font-weight:900;box-shadow:inset 0 1px 0 rgba(255,255,255,.04);cursor:default;overflow:hidden}
+  .history-card.empty::after{content:attr(data-round);font-size:10px;color:#3e466d;font-weight:700}
+  .history-card.blue{background:linear-gradient(180deg,#2b3f8f,#1d2c66);border-color:#4d67cf;color:#e7edff}
+  .history-card.red{background:linear-gradient(180deg,#8f2b3f,#661d2c);border-color:#cf4d67;color:#ffe7eb}
+  .history-card.back{background:repeating-linear-gradient(45deg,#2a2f52,#2a2f52 5px,#1c2140 5px,#1c2140 10px);border-color:#41496f;color:transparent}
+  .history-card.back::after{content:'龍';color:#68729f;font-size:clamp(12px,2.6vw,20px)}
+  .history-card.peekable{cursor:pointer}
+  .history-card.peekable::before{content:'터치';position:absolute;bottom:2px;left:0;right:0;color:#9ba7d9;font-size:8px;font-weight:600;text-align:center}
+  .board-row.opponent .history-card{transform:rotate(180deg)}
+  .history-card.settle-opponent{animation:settleOpp .4s cubic-bezier(.2,.8,.3,1.2)}
+  .history-card.settle-mine{animation:settleMine .4s cubic-bezier(.2,.8,.3,1.2)}
+  @keyframes settleOpp{from{transform:rotate(180deg) translateY(38px);opacity:.2}to{transform:rotate(180deg) translateY(0);opacity:1}}
+  @keyframes settleMine{from{transform:translateY(38px);opacity:.2}to{transform:translateY(0);opacity:1}}
+  .lamp-row{height:7px;margin:3px 1px}
+  .result-lamp{border-radius:999px;background:#171c31;border:1px solid #292f50;box-shadow:inset 0 1px 3px rgba(0,0,0,.8)}
+  .result-lamp.on.blue{background:#4f7bff;border-color:#89a5ff;box-shadow:0 0 9px rgba(79,123,255,.9),inset 0 0 4px rgba(255,255,255,.6)}
+  .result-lamp.on.red{background:#ff5c7a;border-color:#ff9caf;box-shadow:0 0 9px rgba(255,92,122,.9),inset 0 0 4px rgba(255,255,255,.6)}
+  .board-midline{height:1px;margin:5px 0;background:linear-gradient(90deg,transparent,#303858,transparent)}
+  .hand-rack{display:grid;grid-template-columns:repeat(9,minmax(0,56px));justify-content:center;gap:8px;width:100%;min-width:0;margin:8px auto}
+  .hand-rack .tile{width:100%;height:auto;aspect-ratio:.78;font-size:clamp(17px,3vw,26px)}
+  .hand-rack.opponent{transform:rotate(180deg);margin-bottom:2px}
+  .hand-rack .tile.back{cursor:default;pointer-events:none}
+  .hand-caption{text-align:center;color:var(--mut);font-size:11px;margin-top:2px}
   .mmain{margin-top:6px}
   .mbig{width:100%;max-width:280px;display:block;margin:8px auto 0}
-  @media(max-width:520px){ .lamp{flex-basis:74px} .mtitle{font-size:22px} .slot{width:60px;height:78px;font-size:32px} }
+  @media(max-width:520px){
+    .machine{padding-left:9px;padding-right:9px}.mtitle{font-size:20px}.screen{min-width:0;padding-left:5px;padding-right:5px}.screen .scr2{font-size:16px}
+    .slot{width:56px;height:72px;font-size:30px}.current-zone{min-height:82px}.arena-board{padding:8px}.board-row,.lamp-row{gap:3px}.hand-rack{grid-template-columns:repeat(9,minmax(0,1fr));gap:4px}.hand-rack .tile{min-width:0}.hand-rack .tile small{font-size:9px}
+  }
 </style>
 </head>
 <body>
@@ -238,23 +246,16 @@
         </div>
       </div>
       <div class="lamps">
-        <div class="lamp blue" id="lampBlue">
-          <div class="ldot"></div><div class="lname" id="nameBlue">청룡</div><div class="lwin" id="winBlue">0</div><div class="lsub" id="subBlue"></div>
-        </div>
         <div class="screen">
           <div class="scr1" id="scr1">구룡투</div>
           <div class="scr2" id="scr2">대결장 준비</div>
           <div class="scanbar" id="scanbar"></div>
         </div>
-        <div class="lamp red" id="lampRed">
-          <div class="ldot"></div><div class="lname" id="nameRed">적룡</div><div class="lwin" id="winRed">0</div><div class="lsub" id="subRed"></div>
-        </div>
       </div>
       <div class="stage" id="gStage"></div>
       <div class="mmain" id="gMain"></div>
-      <div class="loglist" id="gLog"></div>
     </div>
-    <div class="foot">숫자는 서로 안 보여요 · 승/패/무만 공개 → 대결이 끝나면 전체 공개! · <b>1은 9를 이깁니다</b></div>
+    <div class="foot">제출한 카드는 뒷면으로 놓여요 · 내 지난 카드는 터치하면 잠깐 확인할 수 있어요 · <b>1은 9를 이깁니다</b></div>
   </div>
 
   <div class="foot">P2P(WebRTC)로 직접 연결 · 서버에 게임 데이터가 저장되지 않아요</div>
@@ -457,10 +458,8 @@ function sfxPower(){ tone(160,0.5,'sawtooth',0.07); tone(320,0.4,'sawtooth',0.05
 function say(t){ if(!soundOn)return; try{ const u=new SpeechSynthesisUtterance(t); u.lang='ko-KR'; u.rate=1; u.pitch=1; speechSynthesis.cancel(); speechSynthesis.speak(u); }catch(e){} }
 function bindMute(){ const b=$('gMute'); if(!b)return; b.textContent=soundOn?'🔊':'🔇'; b.onclick=()=>{ soundOn=!soundOn; b.textContent=soundOn?'🔊':'🔇'; if(soundOn)ac(); else { try{speechSynthesis.cancel();}catch(e){} } }; }
 
-let gShownSig=-1, gScanSig=-1, gPrevPhase=null, gPrevOppLocked=false;
+let gShownSig=-1, gScanSig=-1, gPrevPhase=null, gPrevOppLocked=false, gPeekRound=-1, gPeekTimer=null;
 function setScreen(l1,l2,cls){ $('scr1').textContent=l1; $('scr2').textContent=l2; const sc=document.querySelector('.screen'); sc.classList.remove('win','lose','draw','scanning'); if(cls)sc.classList.add(cls); }
-function litLamp(w,flash){ const b=$('lampBlue'),r=$('lampRed'); b.classList.remove('on','flash'); r.classList.remove('on','flash');
-  if(w===0){ b.classList.add('on'); if(flash)b.classList.add('flash'); } else if(w===1){ r.classList.add('on'); if(flash)r.classList.add('flash'); } }
 
 /* ----- 요트 렌더 (+ 슬롯머신 굴림 연출) ----- */
 const FACES=['','⚀','⚁','⚂','⚃','⚄','⚅'];
@@ -542,69 +541,109 @@ function renderGuryong(s){
   const g=s.guryong, opp=1-myIndex, myColor=myIndex===0?'blue':'red', oppColor=opp===0?'blue':'red';
   if(g.phase==='pick' && g.locked[opp] && !gPrevOppLocked) sfxOpp();   // 상대 장착음
 
-  // 램프: 이번 대결 라운드 승수 + 대결승 + 내 표시
-  $('winBlue').textContent=g.roundWins[0]; $('winRed').textContent=g.roundWins[1];
-  $('subBlue').textContent='대결 '+g.matchWins[0]+'승'; $('subRed').textContent='대결 '+g.matchWins[1]+'승';
-  $('lampBlue').classList.toggle('mine',myIndex===0); $('lampRed').classList.toggle('mine',myIndex===1);
-  $('gLog').innerHTML=g.roundLog.map((w,i)=>{const cls=w===-1?'d':(w===myIndex?'w':'l');const t=w===-1?'무':(w===myIndex?'승':'패');return '<span class="chip '+cls+'">R'+(i+1)+' '+t+'</span>';}).join('');
   menuBtn($('gMenu')); $('gExit').onclick=leaveRoom; bindMute();
 
   const M=$('gMain'), ST=$('gStage'), rnd=Math.min(g.round,9), l1=`대결 ${g.duel} · 라운드 ${rnd}/9`;
-  const mySlot=num=> num!=null ? `<div class="slot filled ${myColor} drop">${num}</div>` : `<div class="slot">?</div>`;
-  const oppBack=locked=> locked ? `<div class="slot filled oppback">龍</div>` : `<div class="slot waitpulse">···</div>`;
-  const stage=(o,m)=>`<div class="slotcol"><div class="slabel">상대 · ${s.names[opp]}</div>${o}</div><div class="vsbadge">VS</div><div class="slotcol"><div class="slabel">나 · ${s.names[myIndex]}</div>${m}</div>`;
+  const revealAll=g.phase==='duelover'||g.phase==='matchover'||g.reveal;
+  const settledCount=g.phase==='result'?Math.max(0,g.plays[myIndex].length-1):g.plays[myIndex].length;
+  if(gPeekRound>=settledCount||revealAll)gPeekRound=-1;
+
+  const slotBack=()=>'<div class="slot filled oppback">龍</div>';
+  const slotEmpty=(waiting=false)=>`<div class="slot${waiting?' waitpulse':''}">${waiting?'···':'?'}</div>`;
+  const handCard=(n,color,back=false,pickable=false)=>`<div class="tile ${back?'back':color}"${pickable?` data-pick="${n}"`:''}>${back?'龍':`${n}<small>龍</small>`}</div>`;
+
+  const visibleMyHand=g.hands[myIndex].filter(n=>!(g.phase==='pick'&&g.locked[myIndex]&&n===g.pending[myIndex]));
+  let visibleOppHand=g.hands[opp].slice();
+  if(g.phase==='pick'&&g.locked[opp])visibleOppHand=visibleOppHand.slice(0,-1);
+  const myCanPick=g.phase==='pick'&&!g.locked[myIndex];
+  const opponentRack=visibleOppHand.map(n=>handCard(n,oppColor,!revealAll)).join('');
+  const myRack=visibleMyHand.map(n=>handCard(n,myColor,false,myCanPick)).join('');
+
+  const justSettled=gPrevPhase==='result'&&g.phase!=='result'&&settledCount>0;
+  const historyCard=(player,i)=>{
+    if(i>=settledCount)return `<div class="history-card empty" data-round="${i+1}"></div>`;
+    const color=player===0?'blue':'red', mine=player===myIndex;
+    const show=revealAll||(mine&&gPeekRound===i);
+    const settle=justSettled&&i===settledCount-1?(player===opp?' settle-opponent':' settle-mine'):'';
+    if(show)return `<div class="history-card ${color}${settle}">${g.plays[player][i]}</div>`;
+    const peek=mine?' peekable':'';
+    const data=mine?` data-peek-round="${i}" role="button" aria-label="${i+1}라운드 내 카드 잠깐 보기"`:'';
+    return `<div class="history-card back${peek}${settle}"${data}>龍</div>`;
+  };
+  const boardRow=player=>Array.from({length:9},(_,i)=>historyCard(player,i)).join('');
+  const resultLamp=(player,i,visibleLogCount)=>{
+    const w=g.roundLog[i], on=i<visibleLogCount&&(w===-1||w===player), color=player===0?'blue':'red';
+    return `<div class="result-lamp${on?` on ${color}`:''}"></div>`;
+  };
+  const lampRow=(player,visibleLogCount)=>Array.from({length:9},(_,i)=>resultLamp(player,i,visibleLogCount)).join('');
+
+  const renderArena=(oppCurrent,myCurrent,visibleLogCount)=>{
+    ST.innerHTML=`
+      <div class="hand-caption">상대 패 · ${s.names[opp]}</div>
+      <div class="hand-rack opponent">${opponentRack}</div>
+      <div class="current-zone opponent"><div class="slabel">상대 제출 칸</div>${oppCurrent}</div>
+      <div class="arena-board">
+        <div class="board-row opponent">${boardRow(opp)}</div>
+        <div class="lamp-row">${lampRow(opp,visibleLogCount)}</div>
+        <div class="board-midline"></div>
+        <div class="lamp-row">${lampRow(myIndex,visibleLogCount)}</div>
+        <div class="board-row mine">${boardRow(myIndex)}</div>
+      </div>
+      <div class="current-zone mine">${myCurrent}<div class="slabel">내 제출 칸</div></div>
+      <div class="hand-rack mine">${myRack}</div>
+      <div class="hand-caption">내 패 · ${s.names[myIndex]}</div>`;
+
+    ST.querySelectorAll('[data-pick]').forEach(el=>el.onclick=()=>{sfxInsert();localAction({t:'g_pick',tile:Number(el.dataset.pick)});});
+    ST.querySelectorAll('[data-peek-round]').forEach(el=>el.onclick=()=>{
+      const round=Number(el.dataset.peekRound);
+      clearTimeout(gPeekTimer);gPeekRound=round;render(lastRenderS);
+      gPeekTimer=setTimeout(()=>{if(gPeekRound===round){gPeekRound=-1;render(lastRenderS);}},1200);
+    });
+  };
 
   if(g.phase==='pick'){
-    litLamp(-1);
     if(!g.locked[myIndex]){
       setScreen(l1, g.locked[opp]?'상대 제출 완료':'용을 올리세요');
-      ST.innerHTML=stage(oppBack(g.locked[opp]), `<div class="slot">?</div>`);
-      M.innerHTML='<div class="center mut" style="font-size:13px;margin-bottom:6px">낼 용을 골라 대결장에 올리세요</div><div class="tiles" id="gHand"></div>';
-      const hand=$('gHand');
-      g.hands[myIndex].forEach(n=>{ const el=document.createElement('div'); el.className='tile '+myColor; el.innerHTML=n+'<small>龍</small>'; el.onclick=()=>{ sfxInsert(); localAction({t:'g_pick',tile:n}); }; hand.appendChild(el); });
+      renderArena(g.locked[opp]?slotBack():slotEmpty(),slotEmpty(),g.roundLog.length);
+      M.innerHTML='<div class="center mut" style="font-size:13px">아래의 내 패에서 낼 용을 선택하세요</div>';
     }else{
       setScreen(l1, g.locked[opp]?'판정 준비...':'상대 대기중');
-      ST.innerHTML=stage(oppBack(g.locked[opp]), mySlot(g.pending[myIndex]));
+      renderArena(g.locked[opp]?slotBack():slotEmpty(true),slotBack(),g.roundLog.length);
       M.innerHTML='<div class="center mut waitpulse">제출 완료 — 상대를 기다리는 중…</div>';
     }
   }
   else if(g.phase==='result'){
     const r=g.lastResult, w=r.winner, sig=g.duel*100+r.round;
     if(gShownSig!==sig){                       // 판정(스캔) 단계
-      setScreen(l1,'판정 중...','scanning'); litLamp(-1);
-      ST.innerHTML=stage(oppBack(true), mySlot(r.nums[myIndex])); M.innerHTML='';
+      setScreen(l1,'판정 중...','scanning');
+      renderArena(slotBack(),slotBack(),Math.max(0,g.roundLog.length-1)); M.innerHTML='';
       if(gScanSig!==sig){
         gScanSig=sig; sfxScan();
         setTimeout(()=>{ gShownSig=sig;
           if(w===-1)sfxDraw(); else if(w===myIndex)sfxWin(); else sfxLose();
           say(w===-1?'무승부':(w===0?'청룡 승리':'적룡 승리'));
           render(lastRenderS);
-        },950);
+        },1950);
       }
-    }else{                                     // 결과 공개
+    }else{                                     // 결과 표시(숫자는 계속 비공개)
       const cls=w===-1?'draw':(w===myIndex?'win':'lose');
       setScreen(l1, w===-1?'무승부':(w===0?'청룡 승리!':'적룡 승리!'), cls);
-      litLamp(w,true);
-      ST.innerHTML=stage(oppBack(true), mySlot(r.nums[myIndex]));
-      M.innerHTML='<button class="primary mbig" id="gNextBtn">다음 라운드 ▶</button><div class="center mut" style="font-size:12px;margin-top:6px">상대가 낸 숫자는 대결이 끝나면 공개돼요</div>';
+      renderArena(slotBack(),slotBack(),g.roundLog.length);
+      M.innerHTML='<button class="primary mbig" id="gNextBtn">다음 라운드 ▶</button><div class="center mut" style="font-size:12px;margin-top:6px">표시등으로 결과를 확인하세요. 다음 라운드에는 카드가 기록 칸으로 이동해요</div>';
       $('gNextBtn').onclick=()=>localAction({t:'g_next'});
     }
   }
   else if(g.phase==='duelover'||g.phase==='matchover'){
     const dr=g.duelResult;
-    litLamp(dr.winner,false);
     if(gPrevPhase!==g.phase){
       if(g.phase==='matchover'){ if(g.champion===myIndex)sfxWin(); else sfxLose(); say(g.champion===0?'청룡 최종 우승':'적룡 최종 우승'); }
       else { if(dr.winner===-1)sfxDraw(); else if(dr.winner===myIndex)sfxWin(); else sfxLose(); say(dr.winner===-1?'대결 무승부':(dr.winner===0?'청룡 대결 승리':'적룡 대결 승리')); }
     }
     const scr2 = g.phase==='matchover' ? (g.champion===0?'청룡 최종 우승':'적룡 최종 우승') : (dr.winner===-1?'대결 무승부':(dr.winner===0?'청룡 대결 승':'적룡 대결 승'));
     setScreen(l1, scr2, g.phase==='matchover'?(g.champion===myIndex?'win':'lose'):(dr.winner===myIndex?'win':(dr.winner===-1?'draw':'lose')));
-    ST.innerHTML='';
+    renderArena(slotEmpty(),slotEmpty(),g.roundLog.length);
     const dlabel=dr.winner===-1?'이번 대결 무승부':(dr.winner===myIndex?'이번 대결 승리! 🎉':'이번 대결 패배');
-    let html=`<div class="banner">${dlabel}</div><div class="center mut">라운드 승수 ${dr.roundWins[myIndex]} : ${dr.roundWins[opp]} · 이제 숫자 공개!</div>
-      <table class="rtable" style="margin-top:12px;width:100%"><tr><th>R</th><th>${s.names[myIndex]}</th><th>${s.names[opp]}</th><th>결과</th></tr>`;
-    for(let i=0;i<g.plays[myIndex].length;i++){ const a=g.plays[myIndex][i],b=g.plays[opp][i],ww=g.roundLog[i];const t=ww===-1?'무':(ww===myIndex?'승':'패'); html+=`<tr><td>${i+1}</td><td>${a}</td><td>${b}</td><td>${t}</td></tr>`; }
-    html+='</table>';
+    let html=`<div class="banner">${dlabel}</div><div class="center mut">라운드 승수 ${dr.roundWins[myIndex]} : ${dr.roundWins[opp]} · 판 위의 숫자가 모두 공개됐어요</div>`;
     if(g.phase==='matchover'){
       html+=`<div class="banner" style="color:var(--acc2);margin-top:12px">${g.champion===myIndex?'🏆 최종 우승! 축하해요!':'최종 패배 — 다음 판을 노려요'}</div><div class="center" style="margin-top:8px">`+(isHost?'<button class="primary" id="gRestart">새 게임</button> ':'')+'<button id="gEnd"></button></div>';
     }else{

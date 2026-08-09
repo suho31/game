@@ -83,13 +83,17 @@
   .reaction-btn:hover{background:#293154;border-color:#566493;transform:translateY(-2px)}
   .reaction-btn:active{transform:scale(.9)}
   .reaction-layer{position:fixed;inset:0;z-index:100;overflow:hidden;pointer-events:none}
-  .reaction-pop{position:absolute;left:var(--x);bottom:var(--y);font-size:var(--size);line-height:1;opacity:0;filter:drop-shadow(0 5px 8px rgba(0,0,0,.35));will-change:transform,opacity;animation:reactionFloat var(--duration) cubic-bezier(.2,.65,.3,1) forwards}
-  @keyframes reactionFloat{
-    0%{opacity:0;transform:translate(-50%,0) rotate(0deg) scale(.65)}
-    12%{opacity:.86;transform:translate(calc(-50% + var(--d1)), -6vh) rotate(var(--r1)) scale(1)}
-    48%{opacity:.8;transform:translate(calc(-50% + var(--d2)), -25vh) rotate(var(--r2)) scale(1.08)}
-    78%{opacity:.62;transform:translate(calc(-50% + var(--d1)), -43vh) rotate(var(--r3)) scale(1.14)}
-    100%{opacity:0;transform:translate(calc(-50% + var(--drift)), var(--rise)) rotate(var(--rotation)) scale(1.2)}
+  .reaction-pop{position:absolute;left:var(--x);bottom:var(--y);font-size:var(--size);line-height:1;opacity:0;filter:drop-shadow(0 5px 8px rgba(0,0,0,.35));will-change:transform,opacity;animation:reactionRise var(--duration) cubic-bezier(.22,.55,.35,1) forwards}
+  .reaction-pop>span{display:block;will-change:transform;animation:reactionSway var(--sway-duration) ease-in-out infinite alternate}
+  @keyframes reactionRise{
+    0%{opacity:0;transform:translate(-50%,0) rotate(0deg) scale(.7)}
+    14%{opacity:.86}
+    72%{opacity:.7}
+    100%{opacity:0;transform:translate(calc(-50% + var(--drift)), var(--rise)) rotate(var(--rotation)) scale(1.15)}
+  }
+  @keyframes reactionSway{
+    from{transform:translateX(var(--sway-neg)) rotate(-3deg)}
+    to{transform:translateX(var(--sway)) rotate(3deg)}
   }
 
   /* ---- guryong ---- */
@@ -312,12 +316,12 @@ function makeReaction(emoji){
     x:8+Math.random()*84,
     y:7+Math.random()*25,
     size:30+Math.random()*24,
-    duration:1700+Math.random()*1000,
-    drift:-13+Math.random()*26,
-    d1:-7+Math.random()*14,
-    d2:-10+Math.random()*20,
+    duration:2200+Math.random()*1000,
+    drift:-3+Math.random()*6,
+    sway:4+Math.random()*6,
+    swayDuration:850+Math.random()*450,
     rise:58+Math.random()*24,
-    rotation:-30+Math.random()*60
+    rotation:-10+Math.random()*20
   };
 }
 function normalizeReaction(raw){
@@ -325,20 +329,20 @@ function normalizeReaction(raw){
   return{
     emoji:raw.emoji,
     x:clampNum(raw.x,5,95,50),y:clampNum(raw.y,4,40,12),size:clampNum(raw.size,26,60,40),
-    duration:clampNum(raw.duration,1300,3200,2200),drift:clampNum(raw.drift,-18,18,0),
-    d1:clampNum(raw.d1,-12,12,0),d2:clampNum(raw.d2,-15,15,0),rise:clampNum(raw.rise,48,90,65),
-    rotation:clampNum(raw.rotation,-45,45,0)
+    duration:clampNum(raw.duration,1800,3600,2700),drift:clampNum(raw.drift,-5,5,0),
+    sway:clampNum(raw.sway,3,12,6),swayDuration:clampNum(raw.swayDuration,700,1500,1000),
+    rise:clampNum(raw.rise,48,90,65),rotation:clampNum(raw.rotation,-15,15,0)
   };
 }
 function showReaction(raw){
   const r=normalizeReaction(raw),layer=$('reactionLayer');if(!r||!layer)return;
   while(layer.childElementCount>=40)layer.firstElementChild.remove();
-  const el=document.createElement('div');el.className='reaction-pop';el.textContent=r.emoji;
-  const st=el.style,rot=r.rotation;
+  const el=document.createElement('div'),emoji=document.createElement('span');el.className='reaction-pop';emoji.textContent=r.emoji;el.appendChild(emoji);
+  const st=el.style;
   st.setProperty('--x',r.x+'vw');st.setProperty('--y',r.y+'vh');st.setProperty('--size',r.size+'px');
   st.setProperty('--duration',r.duration+'ms');st.setProperty('--drift',r.drift+'vw');
-  st.setProperty('--d1',r.d1+'vw');st.setProperty('--d2',r.d2+'vw');st.setProperty('--rise',-r.rise+'vh');
-  st.setProperty('--rotation',rot+'deg');st.setProperty('--r1',(-rot*.25)+'deg');st.setProperty('--r2',(rot*.35)+'deg');st.setProperty('--r3',(rot*.7)+'deg');
+  st.setProperty('--sway',r.sway+'px');st.setProperty('--sway-neg',-r.sway+'px');st.setProperty('--sway-duration',r.swayDuration+'ms');
+  st.setProperty('--rise',-r.rise+'vh');st.setProperty('--rotation',r.rotation+'deg');
   layer.appendChild(el);el.addEventListener('animationend',()=>el.remove(),{once:true});setTimeout(()=>el.remove(),r.duration+500);
 }
 function sendReaction(emoji){

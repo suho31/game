@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>요트 다이스 · 구룡투 — 둘이서</title>
+<title>요트 다이스 · 구룡투 · 표창 게임 — 둘이서</title>
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <style>
   :root{
@@ -190,11 +190,26 @@
     .slot{width:56px;height:72px;font-size:30px}.current-zone{min-height:82px}.arena-board{padding:8px}.board-row,.lamp-row{gap:3px}.hand-rack{gap:4px}.hand-rack .tile small{font-size:9px}
     .reaction-bar{gap:5px}.reaction-btn{flex-basis:38px;width:38px;height:38px;font-size:20px}
   }
+
+  /* ---- 표창 게임 ---- */
+  .sh-machine{position:relative;border-radius:22px;padding:12px;background:linear-gradient(180deg,#171d2c,#0b0e17);border:1px solid #303958;box-shadow:0 18px 50px rgba(0,0,0,.5);overflow:hidden}
+  .sh-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+  .sh-title{font-weight:900;font-size:22px;letter-spacing:3px;color:#d8e6ff;text-shadow:0 0 13px rgba(126,168,255,.45)}
+  .sh-score{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;padding:9px 12px;margin-bottom:9px;border-radius:13px;background:#101624;border:1px solid #29324d;font-size:13px}
+  .sh-score>div:first-child{text-align:left}.sh-score>div:last-child{text-align:right}.sh-count{font-size:20px;font-weight:900;font-variant-numeric:tabular-nums}.sh-vs{color:#69738f;font-weight:900}
+  .sh-arena-wrap{position:relative;width:min(100%,540px);margin:0 auto;touch-action:none;user-select:none;-webkit-user-select:none}
+  #shCanvas{display:block;width:100%;height:auto;aspect-ratio:3/5;border-radius:15px;border:2px solid #35405f;background:#111827;box-shadow:inset 0 0 28px rgba(0,0,0,.75);touch-action:none;cursor:crosshair}
+  .sh-help{min-height:20px;text-align:center;color:var(--mut);font-size:13px;margin:9px 2px 2px}
+  .sh-help.mine{color:#9bb2ff;font-weight:700}.sh-help.danger{color:#ff9b9b;font-weight:700}
+  .sh-result{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;border-radius:15px;background:rgba(5,8,15,.74);backdrop-filter:blur(3px)}
+  .sh-result-box{text-align:center;padding:22px;border-radius:16px;background:#171d30;border:1px solid #435073;box-shadow:0 12px 35px rgba(0,0,0,.55)}
+  .sh-result-title{font-size:26px;font-weight:900;margin-bottom:12px}
+  @media(max-height:760px){.sh-arena-wrap{width:min(76vw,390px)}.sh-machine{padding-top:8px}.sh-score{padding-top:5px;padding-bottom:5px;margin-bottom:6px}.sh-help{margin-top:5px}}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>🎲 요트 다이스 · 🐉 구룡투</h1>
+  <h1>🎲 요트 다이스 · 🐉 구룡투 · 🥷 표창 게임</h1>
   <div class="sub">둘이서 온라인 대전 · 방장이 방을 만들고 친구가 숫자 코드로 접속</div>
 
   <!-- ============ LOBBY ============ -->
@@ -241,6 +256,7 @@
       <div class="row" style="justify-content:center">
         <button class="primary" id="pickYacht" style="min-width:180px">🎲 요트 다이스</button>
         <button class="gold" id="pickGuryong" style="min-width:180px">🐉 구룡투</button>
+        <button id="pickShuriken" style="min-width:180px;background:linear-gradient(180deg,#dce7f7,#9eafc8);color:#111827;border-color:#879ab7">🥷 표창 게임</button>
       </div>
       <div class="status" id="menuHint"></div>
     </div>
@@ -291,6 +307,36 @@
     <div class="foot">제출한 카드는 뒷면으로 놓여요 · 내 지난 카드는 터치하면 잠깐 확인할 수 있어요 · <b>1은 9를 이깁니다</b></div>
   </div>
 
+  <!-- ============ SHURIKEN ============ -->
+  <div id="shuriken" class="hidden">
+    <div class="sh-machine">
+      <div class="sh-top">
+        <button class="mbtn" id="shMenu">메뉴로</button>
+        <div class="sh-title">표창 게임</div>
+        <div class="row" style="gap:6px;flex-wrap:nowrap">
+          <button class="mbtn" id="shMute" title="소리 켜기/끄기">🔊</button>
+          <button class="mbtn" id="shExit">처음으로</button>
+        </div>
+      </div>
+      <div class="sh-score">
+        <div><span class="them" id="shOppName">상대</span><br><span class="sh-count" id="shOppCount">10</span>개</div>
+        <div class="sh-vs">VS</div>
+        <div><span class="me" id="shMyName">나</span><br><span class="sh-count" id="shMyCount">10</span>개</div>
+      </div>
+      <div class="sh-arena-wrap">
+        <canvas id="shCanvas" width="900" height="1500" aria-label="표창 게임 경기장"></canvas>
+        <div class="sh-result hidden" id="shResult">
+          <div class="sh-result-box">
+            <div class="sh-result-title" id="shResultTitle"></div>
+            <div id="shResultActions"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sh-help" id="shHelp"></div>
+      <div class="reaction-bar" data-reaction-bar></div>
+    </div>
+  </div>
+
   <div class="foot">P2P(WebRTC)로 직접 연결 · 서버에 게임 데이터가 저장되지 않아요</div>
 </div>
 <div class="reaction-layer" id="reactionLayer" aria-hidden="true"></div>
@@ -303,7 +349,7 @@ let peer=null, conn=null, isHost=false, myIndex=0, myName='나';
 let state=null;                 // 호스트만 전체 state 보유
 
 function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1900);}
-function show(id){['lobby','menu','yacht','guryong'].forEach(v=>$(v).classList.toggle('hidden', v!==id));}
+function show(id){['lobby','menu','yacht','guryong','shuriken'].forEach(v=>$(v).classList.toggle('hidden', v!==id));}
 function code4(){return String(Math.floor(1000+Math.random()*9000));}  // 숫자 4자리
 
 /* ================= 실시간 이모지 반응 ================= */
@@ -417,14 +463,15 @@ function sanitize(s,forIndex){
 }
 
 /* ================= 상태 & 규칙 (호스트에서만 mutate) ================= */
-function initState(){ state={ view:'menu', names:[myName,'친구'], yacht:null, guryong:null }; }
+function initState(){ state={ view:'menu', names:[myName,'친구'], yacht:null, guryong:null, shuriken:null }; }
 function applyAction(pi,a){
   if(!isHost) return;
   switch(a.t){
     case 'chooseGame':
       if(pi!==0) return;
       if(a.game==='yacht'){ state.view='yacht'; state.yacht=newYacht(); }
-      else { state.view='guryong'; state.guryong=newGuryong(); }
+      else if(a.game==='guryong'){ state.view='guryong'; state.guryong=newGuryong(); }
+      else if(a.game==='shuriken'){ state.view='shuriken'; state.shuriken=newShuriken(); }
       return;
     case 'backToMenu': if(pi!==0) return; state.view='menu'; return;
     /* yacht */
@@ -437,6 +484,10 @@ function applyAction(pi,a){
     case 'g_next': gNext(); return;
     case 'g_nextduel': if(pi!==0) return; gNextDuel(); return;
     case 'g_restart': if(pi!==0) return; state.guryong=newGuryong(); return;
+    /* shuriken */
+    case 'sh_catch': shCatch(pi,a); return;
+    case 'sh_throw': shThrow(pi,a); return;
+    case 'sh_restart': if(pi!==0) return; state.shuriken=newShuriken(); return;
   }
 }
 
@@ -513,6 +564,86 @@ function gNextDuel(){const g=state.guryong;if(g.phase!=='duelover')return;
   g.roundLog=[]; g.lastResult=null; g.reveal=false; g.duelResult=null; g.phase='pick';g.lead=starter;g.pickTurn=starter;
 }
 
+/* ---------------- 표창 게임 ---------------- */
+const SH_W=900, SH_H=1500, SH_STAR_R=38, SH_HIT_R=27;
+const SH_BAMBOO_Y=[1385,115]; // 전역 좌표: p0은 아래, p1은 위
+const SH_BAMBOO_X=Array.from({length:10},(_,i)=>63+i*86);
+function shZoneCenter(pi){return{x:SH_W/2,y:pi===0?SH_H*.75:SH_H*.25};}
+function newShuriken(){
+  const starter=Math.random()<.5?0:1, c=shZoneCenter(starter);
+  return{
+    gameId:Math.random().toString(36).slice(2),
+    bamboos:[Array(10).fill(true),Array(10).fill(true)],
+    star:{x:c.x,y:c.y,vx:0,vy:0,angle:0,moving:false,owner:starter},
+    winner:null,starter,launchSeq:0,effect:{seq:0,cuts:[]}
+  };
+}
+function shInOwnHalf(pi,y){return pi===0?y>=SH_H/2:y<=SH_H/2;}
+function shCatch(pi,a){
+  const g=state.shuriken,s=g&&g.star;if(!g||g.winner!==null||!s.moving)return;
+  const x=Number(a.x),y=Number(a.y);if(!Number.isFinite(x)||!Number.isFinite(y)||!shInOwnHalf(pi,y))return;
+  // 상대 화면에서 본 위치와 방장 좌표 사이의 통신 지연을 넉넉하게 보정한다.
+  if(Math.hypot(x-s.x,y-s.y)>190)return;
+  s.x=Math.max(SH_STAR_R,Math.min(SH_W-SH_STAR_R,x));
+  s.y=Math.max(SH_STAR_R,Math.min(SH_H-SH_STAR_R,y));
+  s.vx=0;s.vy=0;s.moving=false;s.owner=pi;
+  shDirty=true;
+}
+function shThrow(pi,a){
+  const g=state.shuriken,s=g&&g.star;if(!g||g.winner!==null||s.moving||s.owner!==pi)return;
+  const sx=Number(a.sx),sy=Number(a.sy),vx=Number(a.vx),vy=Number(a.vy);
+  if(![sx,sy,vx,vy].every(Number.isFinite)||Math.hypot(sx-s.x,sy-s.y)>110)return;
+  const rawSpeed=Math.hypot(vx,vy);if(rawSpeed<1||Math.abs(vy)/rawSpeed<.16)return;
+  const speed=Math.max(220,Math.min(1400,rawSpeed)),scale=speed/rawSpeed;
+  s.vx=vx*scale;s.vy=vy*scale;s.moving=true;s.owner=null;g.launchSeq++;
+  shDirty=true;
+}
+function shSegmentHitsRect(x0,y0,x1,y1,left,top,right,bottom){
+  let lo=0,hi=1;const dx=x1-x0,dy=y1-y0;
+  for(const [p,q] of [[-dx,x0-left],[dx,right-x0],[-dy,y0-top],[dy,bottom-y0]]){
+    if(Math.abs(p)<1e-9){if(q<0)return false;continue;}
+    const r=q/p;if(p<0){if(r>hi)return false;if(r>lo)lo=r;}else{if(r<lo)return false;if(r<hi)hi=r;}
+  }
+  return true;
+}
+let shLastFrame=performance.now(),shLastPush=0,shDirty=false;
+function shStep(dt){
+  const g=state.shuriken,s=g.star;if(!s.moving||g.winner!==null)return;
+  const speed=Math.hypot(s.vx,s.vy),steps=Math.max(1,Math.ceil(speed*dt/13)),stepDt=dt/steps,cuts=[];
+  for(let n=0;n<steps&&s.moving;n++){
+    const ox=s.x,oy=s.y;s.x+=s.vx*stepDt;s.y+=s.vy*stepDt;s.angle=(s.angle+speed*stepDt*.018)%(Math.PI*2);
+    // 좌우에만 벽이 있다. 넘어간 거리까지 보존해서 반사한다.
+    if(s.x<SH_STAR_R){s.x=SH_STAR_R+(SH_STAR_R-s.x);s.vx=Math.abs(s.vx);}
+    else if(s.x>SH_W-SH_STAR_R){s.x=(SH_W-SH_STAR_R)-(s.x-(SH_W-SH_STAR_R));s.vx=-Math.abs(s.vx);}
+
+    for(let p=0;p<2;p++)for(let i=0;i<10;i++){
+      if(!g.bamboos[p][i])continue;
+      const cx=SH_BAMBOO_X[i],cy=SH_BAMBOO_Y[p];
+      if(shSegmentHitsRect(ox,oy,s.x,s.y,cx-15-SH_HIT_R,cy-68-SH_HIT_R,cx+15+SH_HIT_R,cy+68+SH_HIT_R)){
+        g.bamboos[p][i]=false;cuts.push({x:cx,y:cy,p});
+      }
+    }
+    if(g.bamboos[0].every(v=>!v)){g.winner=1;s.moving=false;s.owner=null;}
+    else if(g.bamboos[1].every(v=>!v)){g.winner=0;s.moving=false;s.owner=null;}
+    if(g.winner!==null)break;
+
+    if(s.y<-SH_STAR_R||s.y>SH_H+SH_STAR_R){
+      const receiver=s.y<0?1:0,c=shZoneCenter(receiver);
+      s.x=c.x;s.y=c.y;s.vx=0;s.vy=0;s.moving=false;s.owner=receiver;s.angle=0;shDirty=true;
+    }
+  }
+  if(cuts.length){g.effect={seq:g.effect.seq+1,cuts};shDirty=true;}
+}
+function shFrame(now){
+  const dt=Math.min(.035,Math.max(0,(now-shLastFrame)/1000));shLastFrame=now;
+  if(isHost&&state&&state.view==='shuriken'&&state.shuriken){
+    shStep(dt);
+    if((state.shuriken.star.moving&&now-shLastPush>45)||shDirty){shLastPush=now;shDirty=false;pushState();}
+  }
+  shAnimateDisplay(dt);shDraw();requestAnimationFrame(shFrame);
+}
+requestAnimationFrame(shFrame);
+
 /* ================= 렌더링 ================= */
 let lastRenderS=null, gPrevView=null;
 function render(s){
@@ -522,11 +653,12 @@ function render(s){
   if(s.view==='menu'){renderMenu(s);show('menu');}
   else if(s.view==='yacht'){renderYacht(s);show('yacht');}
   else if(s.view==='guryong'){renderGuryong(s);show('guryong');}
+  else if(s.view==='shuriken'){renderShuriken(s);show('shuriken');}
   gPrevView=s.view;
 }
 function renderMenu(s){
   $('whoLine').textContent=`${s.names[0]}  vs  ${s.names[1]}`;
-  $('pickYacht').disabled=!isHost; $('pickGuryong').disabled=!isHost;
+  $('pickYacht').disabled=!isHost; $('pickGuryong').disabled=!isHost; $('pickShuriken').disabled=!isHost;
   $('menuHint').textContent=isHost?'방장이 게임을 선택하면 둘 다 시작돼요.':'방장이 게임을 고르는 중… 잠시만요.';
 }
 const nameOf=(s,i)=> i===myIndex?`${s.names[i]}(나)`:s.names[i];
@@ -751,6 +883,121 @@ function renderGuryong(s){
   if(g.duel===1 && g.round===1 && g.phase==='pick' && g.plays[0].length===0 && g.plays[1].length===0){ gShownSig=-1; gScanSig=-1; }
 }
 
+/* ----- 표창 게임 렌더·입력 ----- */
+let shViewState=null,shDisplay=null,shDisplayLaunch=-1,shSeenEffect=0,shGameId=null,shSeenWinner=null,shParticles=[],shDrag=null;
+function sfxShThrow(){tone(920,.08,'sawtooth',.07);tone(520,.16,'triangle',.06,.035);}
+function sfxShCatch(){tone(420,.055,'square',.1);tone(880,.1,'triangle',.11,.045);}
+function sfxShCut(count){for(let i=0;i<Math.min(count,5);i++)tone(240+i*35,.07,'sawtooth',.075,i*.035);}
+function shVibrate(count){
+  try{if(!navigator.vibrate)return;const p=[];for(let i=0;i<Math.min(10,count);i++){p.push(32);if(i<count-1)p.push(26);}navigator.vibrate(p);}catch(e){}
+}
+function shSpawnCuts(cuts){
+  cuts.forEach(c=>{for(let i=0;i<15;i++)shParticles.push({x:c.x+(Math.random()-.5)*25,y:c.y+(Math.random()-.5)*70,vx:(Math.random()-.5)*270,vy:(Math.random()-.5)*270,life:.45+Math.random()*.5,size:5+Math.random()*8,color:Math.random()<.72?'#82c96b':'#c9a461'});});
+  if(shParticles.length>220)shParticles.splice(0,shParticles.length-220);
+}
+function renderShuriken(s){
+  const g=s.shuriken;if(!g)return;shViewState=s;
+  if(shGameId!==g.gameId){shGameId=g.gameId;shSeenEffect=0;shSeenWinner=null;shParticles=[];shDisplay=null;shDisplayLaunch=-1;}
+  menuBtn($('shMenu'));$('shExit').onclick=leaveRoom;
+  const mute=$('shMute');mute.textContent=soundOn?'🔊':'🔇';mute.onclick=()=>{soundOn=!soundOn;mute.textContent=soundOn?'🔊':'🔇';if(soundOn)ac();};
+  const opp=1-myIndex,myLeft=g.bamboos[myIndex].filter(Boolean).length,oppLeft=g.bamboos[opp].filter(Boolean).length;
+  $('shMyName').textContent=nameOf(s,myIndex);$('shOppName').textContent=nameOf(s,opp);
+  $('shMyCount').textContent=myLeft;$('shOppCount').textContent=oppLeft;
+
+  const st=g.star;
+  if(isHost){shDisplay=null;}
+  else if(!shDisplay||shDisplayLaunch!==g.launchSeq||shDisplay.moving!==st.moving){shDisplay={...st};shDisplayLaunch=g.launchSeq;}
+  else if(st.moving){shDisplay.x+=(st.x-shDisplay.x)*.42;shDisplay.y+=(st.y-shDisplay.y)*.42;shDisplay.vx=st.vx;shDisplay.vy=st.vy;shDisplay.angle=st.angle;shDisplay.owner=st.owner;}
+  else shDisplay={...st};
+
+  if(g.effect&&g.effect.seq>shSeenEffect){
+    shSeenEffect=g.effect.seq;shSpawnCuts(g.effect.cuts||[]);sfxShCut((g.effect.cuts||[]).length);shVibrate((g.effect.cuts||[]).length);
+  }
+  if(g.winner!==null&&shSeenWinner===null){shSeenWinner=g.winner;if(g.winner===myIndex)sfxWin();else sfxLose();}
+  const help=$('shHelp');help.className='sh-help';
+  if(g.winner!==null){help.textContent='게임이 끝났습니다.';}
+  else if(!st.moving&&st.owner===myIndex){help.textContent='표창을 잡고 원하는 방향으로 빠르게 스와이프하세요.';help.classList.add('mine');}
+  else if(st.moving&&shInOwnHalf(myIndex,st.y)){help.textContent='내 구역입니다! 날아오는 표창을 터치해서 잡으세요.';help.classList.add('danger');}
+  else if(st.moving){help.textContent='표창이 이동 중입니다.';}
+  else help.textContent=`${s.names[st.owner]}님이 표창을 던질 차례입니다.`;
+
+  const result=$('shResult');result.classList.toggle('hidden',g.winner===null);
+  if(g.winner!==null){
+    $('shResultTitle').textContent=g.winner===myIndex?'🏆 승리!':'패배';
+    $('shResultTitle').style.color=g.winner===myIndex?'#ffd166':'#ff8b8b';
+    $('shResultActions').innerHTML=(isHost?'<button class="primary" id="shRestart">다시하기</button> ':'')+'<button id="shBack"></button>';
+    if(isHost)$('shRestart').onclick=()=>localAction({t:'sh_restart'});menuBtn($('shBack'));
+  }
+}
+function shAnimateDisplay(dt){
+  if(!isHost&&shDisplay&&shDisplay.moving&&shViewState&&shViewState.view==='shuriken'){
+    const speed=Math.hypot(shDisplay.vx,shDisplay.vy);
+    shDisplay.x+=shDisplay.vx*dt;shDisplay.y+=shDisplay.vy*dt;shDisplay.angle=(shDisplay.angle+speed*dt*.018)%(Math.PI*2);
+    if(shDisplay.x<SH_STAR_R){shDisplay.x=SH_STAR_R+(SH_STAR_R-shDisplay.x);shDisplay.vx=Math.abs(shDisplay.vx);}
+    else if(shDisplay.x>SH_W-SH_STAR_R){shDisplay.x=(SH_W-SH_STAR_R)-(shDisplay.x-(SH_W-SH_STAR_R));shDisplay.vx=-Math.abs(shDisplay.vx);}
+  }
+  shParticles.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=250*dt;p.life-=dt;});shParticles=shParticles.filter(p=>p.life>0);
+}
+function shDrawBamboo(ctx,pi,i,alive){
+  const x=SH_BAMBOO_X[i],base=pi===0?1470:30,tip=pi===0?1315:185,top=Math.min(base,tip),h=Math.abs(base-tip);
+  ctx.save();
+  if(alive){
+    const grad=ctx.createLinearGradient(x-16,0,x+16,0);grad.addColorStop(0,'#315d35');grad.addColorStop(.5,'#86bf57');grad.addColorStop(1,'#244b2b');ctx.fillStyle=grad;
+    ctx.fillRect(x-15,top,30,h);ctx.strokeStyle='rgba(205,239,139,.42)';ctx.lineWidth=3;
+    for(let y=top+28;y<top+h;y+=39){ctx.beginPath();ctx.moveTo(x-14,y);ctx.lineTo(x+14,y);ctx.stroke();}
+    ctx.fillStyle='#579c49';const leafY=pi===0?top+28:top+h-28;
+    ctx.beginPath();ctx.ellipse(x-31,leafY,27,9,-.45,0,Math.PI*2);ctx.ellipse(x+31,leafY+14,27,9,.45,0,Math.PI*2);ctx.fill();
+  }else{
+    ctx.fillStyle='#315d35';const sy=pi===0?base-28:base;ctx.fillRect(x-15,sy,30,28);ctx.strokeStyle='#d7c27b';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(x-15,pi===0?sy:sy+28);ctx.lineTo(x+15,pi===0?sy+7:sy+21);ctx.stroke();
+  }
+  ctx.restore();
+}
+function shDrawStar(ctx,s){
+  ctx.save();ctx.translate(s.x,s.y);ctx.rotate(s.angle);ctx.shadowColor=s.owner===myIndex?'rgba(122,164,255,.9)':'rgba(213,228,255,.48)';ctx.shadowBlur=s.owner===myIndex?20:10;
+  const grad=ctx.createRadialGradient(-8,-10,4,0,0,48);grad.addColorStop(0,'#f8fbff');grad.addColorStop(.42,'#aebdd0');grad.addColorStop(1,'#465469');ctx.fillStyle=grad;ctx.strokeStyle='#e6efff';ctx.lineWidth=3;
+  ctx.beginPath();
+  for(let i=0;i<16;i++){const a=-Math.PI/2+i*Math.PI/8,r=i%4===0?48:(i%4===2?18:27),x=Math.cos(a)*r,y=Math.sin(a)*r;i?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.fillStyle='#151b27';ctx.beginPath();ctx.arc(0,0,10,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#8392a7';ctx.stroke();ctx.restore();
+}
+function shDraw(){
+  const canvas=$('shCanvas');if(!canvas||!shViewState||shViewState.view!=='shuriken'||canvas.closest('#shuriken').classList.contains('hidden'))return;
+  const g=isHost&&state&&state.view==='shuriken'?state.shuriken:shViewState.shuriken;if(!g)return;
+  const ctx=canvas.getContext('2d');ctx.clearRect(0,0,SH_W,SH_H);
+  const bg=ctx.createLinearGradient(0,0,0,SH_H);bg.addColorStop(0,'#251923');bg.addColorStop(.47,'#111a25');bg.addColorStop(.53,'#111a25');bg.addColorStop(1,'#15213a');ctx.fillStyle=bg;ctx.fillRect(0,0,SH_W,SH_H);
+  ctx.strokeStyle='rgba(190,210,235,.13)';ctx.lineWidth=3;ctx.setLineDash([14,18]);ctx.beginPath();ctx.moveTo(0,SH_H/2);ctx.lineTo(SH_W,SH_H/2);ctx.stroke();ctx.setLineDash([]);
+  // 화면 가장자리의 반사 벽은 좌우에만 표시한다.
+  const wall=ctx.createLinearGradient(0,0,42,0);wall.addColorStop(0,'rgba(188,211,242,.5)');wall.addColorStop(1,'transparent');ctx.fillStyle=wall;ctx.fillRect(0,0,44,SH_H);ctx.save();ctx.translate(SH_W,0);ctx.scale(-1,1);ctx.fillStyle=wall;ctx.fillRect(0,0,44,SH_H);ctx.restore();
+  ctx.save();if(myIndex===1){ctx.translate(SH_W,SH_H);ctx.rotate(Math.PI);}
+  for(let p=0;p<2;p++)for(let i=0;i<10;i++)shDrawBamboo(ctx,p,i,g.bamboos[p][i]);
+  shParticles.forEach(p=>{ctx.globalAlpha=Math.min(1,p.life*2);ctx.fillStyle=p.color;ctx.fillRect(p.x-p.size/2,p.y-p.size/2,p.size,p.size*1.8);});ctx.globalAlpha=1;
+  const star=isHost?g.star:(shDisplay||g.star);shDrawStar(ctx,star);ctx.restore();
+}
+function shCanvasPoint(e){
+  const c=$('shCanvas'),r=c.getBoundingClientRect();let x=(e.clientX-r.left)*SH_W/r.width,y=(e.clientY-r.top)*SH_H/r.height;
+  if(myIndex===1){x=SH_W-x;y=SH_H-y;}return{x,y};
+}
+function shShownStar(){
+  if(isHost&&state&&state.shuriken)return state.shuriken.star;
+  return shDisplay||(shViewState&&shViewState.shuriken.star);
+}
+function shPointerDown(e){
+  if(!shViewState||shViewState.view!=='shuriken'||shViewState.shuriken.winner!==null)return;
+  const p=shCanvasPoint(e),s=shShownStar();if(!s||Math.hypot(p.x-s.x,p.y-s.y)>66)return;
+  const canTake=(!s.moving&&s.owner===myIndex)||(s.moving&&shInOwnHalf(myIndex,p.y));if(!canTake)return;
+  e.preventDefault();$('shCanvas').setPointerCapture(e.pointerId);shDrag={id:e.pointerId,start:p,time:performance.now(),caught:s.moving};
+  if(s.moving){localAction({t:'sh_catch',x:p.x,y:p.y});if(shDisplay){shDisplay.x=p.x;shDisplay.y=p.y;shDisplay.vx=0;shDisplay.vy=0;shDisplay.moving=false;shDisplay.owner=myIndex;}sfxShCatch();}
+}
+function shPointerUp(e){
+  if(!shDrag||shDrag.id!==e.pointerId)return;e.preventDefault();const d=shDrag;shDrag=null;const p=shCanvasPoint(e),dx=p.x-d.start.x,dy=p.y-d.start.y,dist=Math.hypot(dx,dy);
+  if(dist<22){toast('조금 더 길게 스와이프하세요');return;}
+  const elapsed=Math.max(.06,Math.min(.7,(performance.now()-d.time)/1000)),vx=dx/elapsed*1.35,vy=dy/elapsed*1.35,speed=Math.hypot(vx,vy);
+  if(Math.abs(vy)/speed<.16){toast('수평으로는 던질 수 없어요');return;}
+  const current=shShownStar();localAction({t:'sh_throw',sx:d.start.x,sy:d.start.y,vx,vy});
+  if(shDisplay&&current){const capped=Math.max(220,Math.min(1400,speed)),k=capped/speed;shDisplay.vx=vx*k;shDisplay.vy=vy*k;shDisplay.moving=true;shDisplay.owner=null;}
+  sfxShThrow();
+}
+function shPointerCancel(e){if(shDrag&&shDrag.id===e.pointerId)shDrag=null;}
+
 /* ================= 바인딩 ================= */
 $('btnCreate').onclick=createRoom;
 $('btnJoin').onclick=()=>joinRoom($('joinCode').value);
@@ -758,6 +1005,10 @@ $('joinCode').addEventListener('input',e=>e.target.value=e.target.value.replace(
 $('joinCode').addEventListener('keydown',e=>{if(e.key==='Enter')joinRoom($('joinCode').value);});
 $('pickYacht').onclick=()=>localAction({t:'chooseGame',game:'yacht'});
 $('pickGuryong').onclick=()=>localAction({t:'chooseGame',game:'guryong'});
+$('pickShuriken').onclick=()=>localAction({t:'chooseGame',game:'shuriken'});
+$('shCanvas').addEventListener('pointerdown',shPointerDown);
+$('shCanvas').addEventListener('pointerup',shPointerUp);
+$('shCanvas').addEventListener('pointercancel',shPointerCancel);
 initReactionBars();
 (function(){const j=new URLSearchParams(location.search).get('join');if(j){$('joinCode').value=String(j).replace(/\D/g,'');toast('코드가 입력됐어요. 이름 적고 참가!');}})();
 </script>

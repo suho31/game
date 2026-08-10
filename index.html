@@ -486,6 +486,7 @@ function applyAction(pi,a){
     case 'g_restart': if(pi!==0) return; state.guryong=newGuryong(); return;
     /* shuriken */
     case 'sh_catch': shCatch(pi,a); return;
+    case 'sh_drag': shDragMove(pi,a); return;
     case 'sh_throw': shThrow(pi,a); return;
     case 'sh_restart': if(pi!==0) return; state.shuriken=newShuriken(); return;
   }
@@ -579,22 +580,32 @@ function newShuriken(){
   };
 }
 function shInOwnHalf(pi,y){return pi===0?y>=SH_H/2:y<=SH_H/2;}
+function shConstrainHeld(pi,x,y){
+  return{
+    x:Math.max(SH_STAR_R,Math.min(SH_W-SH_STAR_R,x)),
+    y:Math.max(SH_STAR_R,Math.min(SH_H-SH_STAR_R,y))
+  };
+}
 function shCatch(pi,a){
   const g=state.shuriken,s=g&&g.star;if(!g||g.winner!==null||!s.moving)return;
   const x=Number(a.x),y=Number(a.y);if(!Number.isFinite(x)||!Number.isFinite(y)||!shInOwnHalf(pi,y))return;
   // 상대 화면에서 본 위치와 방장 좌표 사이의 통신 지연을 넉넉하게 보정한다.
-  if(Math.hypot(x-s.x,y-s.y)>190)return;
-  s.x=Math.max(SH_STAR_R,Math.min(SH_W-SH_STAR_R,x));
-  s.y=Math.max(SH_STAR_R,Math.min(SH_H-SH_STAR_R,y));
+  if(Math.hypot(x-s.x,y-s.y)>280)return;
+  const held=shConstrainHeld(pi,x,y);s.x=held.x;s.y=held.y;
   s.vx=0;s.vy=0;s.moving=false;s.owner=pi;
   shDirty=true;
+}
+function shDragMove(pi,a){
+  const g=state.shuriken,s=g&&g.star;if(!g||g.winner!==null||s.moving||s.owner!==pi)return;
+  const x=Number(a.x),y=Number(a.y);if(!Number.isFinite(x)||!Number.isFinite(y))return;
+  const held=shConstrainHeld(pi,x,y);s.x=held.x;s.y=held.y;
 }
 function shThrow(pi,a){
   const g=state.shuriken,s=g&&g.star;if(!g||g.winner!==null||s.moving||s.owner!==pi)return;
   const sx=Number(a.sx),sy=Number(a.sy),vx=Number(a.vx),vy=Number(a.vy);
   if(![sx,sy,vx,vy].every(Number.isFinite)||Math.hypot(sx-s.x,sy-s.y)>110)return;
   const rawSpeed=Math.hypot(vx,vy);if(rawSpeed<1||Math.abs(vy)/rawSpeed<.16)return;
-  const speed=Math.max(220,Math.min(1400,rawSpeed)),scale=speed/rawSpeed;
+  const speed=Math.max(286,Math.min(1820,rawSpeed*1.3)),scale=speed/rawSpeed;
   s.vx=vx*scale;s.vy=vy*scale;s.moving=true;s.owner=null;g.launchSeq++;
   shDirty=true;
 }
@@ -916,7 +927,7 @@ function renderShuriken(s){
   if(g.winner!==null&&shSeenWinner===null){shSeenWinner=g.winner;if(g.winner===myIndex)sfxWin();else sfxLose();}
   const help=$('shHelp');help.className='sh-help';
   if(g.winner!==null){help.textContent='게임이 끝났습니다.';}
-  else if(!st.moving&&st.owner===myIndex){help.textContent='표창을 잡고 원하는 방향으로 빠르게 스와이프하세요.';help.classList.add('mine');}
+  else if(!st.moving&&st.owner===myIndex){help.textContent='표창을 누른 채 움직이고, 던질 방향으로 드래그하며 손을 놓으세요.';help.classList.add('mine');}
   else if(st.moving&&shInOwnHalf(myIndex,st.y)){help.textContent='내 구역입니다! 날아오는 표창을 터치해서 잡으세요.';help.classList.add('danger');}
   else if(st.moving){help.textContent='표창이 이동 중입니다.';}
   else help.textContent=`${s.names[st.owner]}님이 표창을 던질 차례입니다.`;
@@ -984,16 +995,27 @@ function shPointerDown(e){
   if(!shViewState||shViewState.view!=='shuriken'||shViewState.shuriken.winner!==null)return;
   const p=shCanvasPoint(e),s=shShownStar();if(!s||Math.hypot(p.x-s.x,p.y-s.y)>66)return;
   const canTake=(!s.moving&&s.owner===myIndex)||(s.moving&&shInOwnHalf(myIndex,p.y));if(!canTake)return;
-  e.preventDefault();$('shCanvas').setPointerCapture(e.pointerId);shDrag={id:e.pointerId,start:p,time:performance.now(),caught:s.moving};
+  const now=performance.now(),held=shConstrainHeld(myIndex,p.x,p.y);
+  e.preventDefault();$('shCanvas').setPointerCapture(e.pointerId);shDrag={id:e.pointerId,samples:[{...held,t:now}],lastSend:now,caught:s.moving};
   if(s.moving){localAction({t:'sh_catch',x:p.x,y:p.y});if(shDisplay){shDisplay.x=p.x;shDisplay.y=p.y;shDisplay.vx=0;shDisplay.vy=0;shDisplay.moving=false;shDisplay.owner=myIndex;}sfxShCatch();}
 }
+function shPointerMove(e){
+  if(!shDrag||shDrag.id!==e.pointerId)return;e.preventDefault();
+  const now=performance.now(),raw=shCanvasPoint(e),p=shConstrainHeld(myIndex,raw.x,raw.y),d=shDrag;
+  d.samples.push({...p,t:now});d.samples=d.samples.filter(v=>v.t>=now-170);
+  if(isHost&&state&&state.shuriken){state.shuriken.star.x=p.x;state.shuriken.star.y=p.y;}
+  else if(shDisplay){shDisplay.x=p.x;shDisplay.y=p.y;shDisplay.vx=0;shDisplay.vy=0;shDisplay.moving=false;shDisplay.owner=myIndex;}
+  if(now-d.lastSend>=45){d.lastSend=now;localAction({t:'sh_drag',x:p.x,y:p.y});}
+}
 function shPointerUp(e){
-  if(!shDrag||shDrag.id!==e.pointerId)return;e.preventDefault();const d=shDrag;shDrag=null;const p=shCanvasPoint(e),dx=p.x-d.start.x,dy=p.y-d.start.y,dist=Math.hypot(dx,dy);
-  if(dist<22){toast('조금 더 길게 스와이프하세요');return;}
-  const elapsed=Math.max(.06,Math.min(.7,(performance.now()-d.time)/1000)),vx=dx/elapsed*1.35,vy=dy/elapsed*1.35,speed=Math.hypot(vx,vy);
+  if(!shDrag||shDrag.id!==e.pointerId)return;e.preventDefault();const d=shDrag,now=performance.now(),raw=shCanvasPoint(e),p=shConstrainHeld(myIndex,raw.x,raw.y);shDrag=null;
+  d.samples.push({...p,t:now});const recent=d.samples.filter(v=>v.t>=now-160),from=recent.length>1?recent[0]:p,dx=p.x-from.x,dy=p.y-from.y,dist=Math.hypot(dx,dy);
+  localAction({t:'sh_drag',x:p.x,y:p.y});
+  if(dist<16){toast('던질 방향으로 움직이면서 손을 놓으세요');return;}
+  const elapsed=Math.max(.035,(now-from.t)/1000),vx=dx/elapsed*1.35,vy=dy/elapsed*1.35,speed=Math.hypot(vx,vy);
   if(Math.abs(vy)/speed<.16){toast('수평으로는 던질 수 없어요');return;}
-  const current=shShownStar();localAction({t:'sh_throw',sx:d.start.x,sy:d.start.y,vx,vy});
-  if(shDisplay&&current){const capped=Math.max(220,Math.min(1400,speed)),k=capped/speed;shDisplay.vx=vx*k;shDisplay.vy=vy*k;shDisplay.moving=true;shDisplay.owner=null;}
+  const current=shShownStar();localAction({t:'sh_throw',sx:p.x,sy:p.y,vx,vy});
+  if(shDisplay&&current){const capped=Math.max(286,Math.min(1820,speed*1.3)),k=capped/speed;shDisplay.x=p.x;shDisplay.y=p.y;shDisplay.vx=vx*k;shDisplay.vy=vy*k;shDisplay.moving=true;shDisplay.owner=null;}
   sfxShThrow();
 }
 function shPointerCancel(e){if(shDrag&&shDrag.id===e.pointerId)shDrag=null;}
@@ -1007,6 +1029,7 @@ $('pickYacht').onclick=()=>localAction({t:'chooseGame',game:'yacht'});
 $('pickGuryong').onclick=()=>localAction({t:'chooseGame',game:'guryong'});
 $('pickShuriken').onclick=()=>localAction({t:'chooseGame',game:'shuriken'});
 $('shCanvas').addEventListener('pointerdown',shPointerDown);
+$('shCanvas').addEventListener('pointermove',shPointerMove);
 $('shCanvas').addEventListener('pointerup',shPointerUp);
 $('shCanvas').addEventListener('pointercancel',shPointerCancel);
 initReactionBars();

@@ -567,6 +567,8 @@ function gNextDuel(){const g=state.guryong;if(g.phase!=='duelover')return;
 
 /* ---------------- 표창 게임 ---------------- */
 const SH_W=900, SH_H=1500, SH_STAR_R=38, SH_HIT_R=27;
+// 경기장 전체를 가로지르는 데 최소 약 0.97초는 걸리도록 투척 속도를 제한한다.
+const SH_THROW_MIN_SPEED=286, SH_THROW_MAX_SPEED=1550, SH_THROW_POWER=1.3;
 const SH_BAMBOO_Y=[1385,115]; // 전역 좌표: p0은 아래, p1은 위
 const SH_BAMBOO_X=Array.from({length:10},(_,i)=>63+i*86);
 function shZoneCenter(pi){return{x:SH_W/2,y:pi===0?SH_H*.75:SH_H*.25};}
@@ -600,13 +602,19 @@ function shDragMove(pi,a){
   const x=Number(a.x),y=Number(a.y);if(!Number.isFinite(x)||!Number.isFinite(y))return;
   const held=shConstrainHeld(pi,x,y);s.x=held.x;s.y=held.y;
 }
+function shLimitedVelocity(vx,vy){
+  const rawSpeed=Math.hypot(vx,vy);
+  const speed=Math.max(SH_THROW_MIN_SPEED,Math.min(SH_THROW_MAX_SPEED,rawSpeed*SH_THROW_POWER));
+  const scale=speed/rawSpeed;
+  return{vx:vx*scale,vy:vy*scale};
+}
 function shThrow(pi,a){
   const g=state.shuriken,s=g&&g.star;if(!g||g.winner!==null||s.moving||s.owner!==pi)return;
   const sx=Number(a.sx),sy=Number(a.sy),vx=Number(a.vx),vy=Number(a.vy);
   if(![sx,sy,vx,vy].every(Number.isFinite)||Math.hypot(sx-s.x,sy-s.y)>110)return;
   const rawSpeed=Math.hypot(vx,vy);if(rawSpeed<1||Math.abs(vy)/rawSpeed<.16)return;
-  const speed=Math.max(286,Math.min(1820,rawSpeed*1.3)),scale=speed/rawSpeed;
-  s.vx=vx*scale;s.vy=vy*scale;s.moving=true;s.owner=null;g.launchSeq++;
+  const limited=shLimitedVelocity(vx,vy);
+  s.vx=limited.vx;s.vy=limited.vy;s.moving=true;s.owner=null;g.launchSeq++;
   shDirty=true;
 }
 function shSegmentHitsRect(x0,y0,x1,y1,left,top,right,bottom){
@@ -1015,7 +1023,7 @@ function shPointerUp(e){
   const elapsed=Math.max(.035,(now-from.t)/1000),vx=dx/elapsed*1.35,vy=dy/elapsed*1.35,speed=Math.hypot(vx,vy);
   if(Math.abs(vy)/speed<.16){toast('수평으로는 던질 수 없어요');return;}
   const current=shShownStar();localAction({t:'sh_throw',sx:p.x,sy:p.y,vx,vy});
-  if(shDisplay&&current){const capped=Math.max(286,Math.min(1820,speed*1.3)),k=capped/speed;shDisplay.x=p.x;shDisplay.y=p.y;shDisplay.vx=vx*k;shDisplay.vy=vy*k;shDisplay.moving=true;shDisplay.owner=null;}
+  if(shDisplay&&current){const limited=shLimitedVelocity(vx,vy);shDisplay.x=p.x;shDisplay.y=p.y;shDisplay.vx=limited.vx;shDisplay.vy=limited.vy;shDisplay.moving=true;shDisplay.owner=null;}
   sfxShThrow();
 }
 function shPointerCancel(e){if(shDrag&&shDrag.id===e.pointerId)shDrag=null;}
